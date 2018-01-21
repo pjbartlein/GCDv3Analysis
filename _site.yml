@@ -1,0 +1,49 @@
+name: GCD Analysis
+navbar:
+  title: GCD Analysis
+  left:
+  - text: Overview
+    href: Overview.html
+  - text: Analyses
+    menu:
+    - text: Standard analysis
+    - text: Query and site .csv files from an Access database (mdb-to-csv.R)
+      href: mdb-to-csv_07.html
+    - text: Box-Cox transformation and Z-Score rescaling (trans-and-zscore.R)
+      href: trans-and-zscore_07.html
+    - text: Presampling or binning of transformed data (presample-bin.R)
+      href: presample-bin_07.html
+    - text: Composite curves and bootstrap C.I.'s using locfit() (smooth-curve.R)
+      href: smooth-curve_07.html
+    - text: Alternative approaches
+    - text: Box-Cox transformation and normalized anomaly rescaling (trans-and-norman.R)
+      href: trans-and-norman_10.html
+    - text: Composite curves and bootstrap C.I.'s via binning
+      href: bin-boot_10.html
+  - text: Code
+    menu:
+    - text: Standard analysis
+    - text: mdb-to-csv_code.R
+      href: mdb-to-csv_07_code.html
+    - text: trans-and-zscore.R
+      href: trans-and-zscore_07_code.html
+    - text: presample-bin.R
+      href: presample-bin_07_code.html
+    - text: smooth-curve.R
+      href: smooth-curve_07_code.html
+    - text: Alternative approaches
+    - text: mdb-to-csv_code_osx.R
+      href: mdb-to-csv_07_code_osx.html
+    - text: trans-and-norman.R
+      href: trans-and-norman_10_code.html
+    - text: bin-boot.R
+      href: bin-boot_10_code.html
+output:
+  html_document:
+    theme: united
+    highlight: haddock
+    css: SI-md-08.css
+    lib_dir: site_libs
+    self_contained: no
+output_dir: _site
+

@@ -1,0 +1,32 @@
+---
+title: "Analysis of the Global Charcoal Database"
+output:
+  html_document:
+    theme: united
+    css: SI-md-08.css
+    fig_caption: yes
+    highlight: haddock
+    number_sections: no
+    toc: no
+    toc_float: false
+    collapsed: no
+---
+
+# R scripts for fitting composite curves of charcoal data #
+
+The intention of these pages is to describe and document the analysis steps that were developed as a set of Fortran programs, and are now implemented in the R `paleofire` package.  The scripts can also provide a "point-of-departure" for the development and testing of additional analysis procedures that are not currently implemented in the `paleofire` package.
+
+Contents:
+
+- <font face="sans-serif">Overview:</font>  Discussion of analysis steps
+- <font face="sans-serif">Analyses:</font> Annotated (RMarkdown) code for the analyses
+- <font face="sans-serif">Code:</font>  R code that can be saved and run as scripts
+
+Links and other information sources:
+
+- Global Paleofire Working Group (GPWG) [[http://www.gpwg.paleofire.org/]](http://www.gpwg.paleofire.org/)
+- Global Charcoal Database [[http://paleofire.org/]](http://paleofire.org/)
+- Marlon, J. R., Kelly, R., Daniau, A.-L., Vanni&egrave;re B., Power, M. J., Bartlein, P., Higuera, P., Blarquez, O., Brewer, S., Br&uuml;cher, T., Feurdean, A., Gil Romera, G., Iglesias, V., Maezumi, S. Y., Magi, B., Courtney Mustaphi, C. J., Zhihai, T. (2016). Reconstructions of biomass burning from sediment charcoal records to improve data-model comparisons. *Biogeosciences* 13:3225-3244. [[doi:10.5194/bg-13-3225-2016]](http://dx.doi.org/10.5194/bg-13-3225-2016)
+- Blarquez O., Vanni&egrave;re, B., Marlon J. R., Daniau A.-L., Power M. J., Brewer S., Bartlein P. J., (2014). paleofire: an R package to analyse sedimentary charcoal records from the Global Charcoal Database to reconstruct past biomass burning. *Computers & Geosciences* 72:255-261. [[doi:10.1016/j.cageo.2014.07.020]](http://dx.doi.org/10.1016/j.cageo.2014.07.020)
+- Daniau, A.-L. et al. (2012).  Predictability of biomass burning.  *Global Biogeochemical Cycles* 26:GB4007. [[doi:10.1029/2011GB004249]](http://dx.doi.org/10.1029/2011GB004249)
+- Power, M.J., Marlon, J.R., Bartlein, P.J., Harrison, S.P., 2010. Fire history and the Global Charcoal Database: A new tool for hypothesis testing and data exploration. *Palaeogeography Palaeoclimatology Palaeoecology 291:52-59.* [[doi:10.1016/j.palaeo.2009.09.014]](http://dx.doi.org/10.1016/j.palaeo.2009.09.014)

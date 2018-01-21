@@ -1,0 +1,280 @@
+---
+title: bin-boot.R
+output:
+  html_document:
+    collapsed: no
+    fig_caption: yes
+    highlight: haddock
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_float: no
+---
+
+```{r eval=FALSE}
+# age-bin averages of influx data
+# bootstrap-by-site confidence intervals
+
+# names
+queryname <- "v3i" # 
+basename <- "nt2kb" 
+
+# paths for input and output .csv files -- modify as appropriate
+datapath <- "/Projects/GPWG/GPWGv3/GCDv3Data/v3i/"
+sitelistpath <- "/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_sitelists/"
+sitelist <- "v3i_nsa_globe"
+outpath <- "/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_curves/"
+
+# prebinning bin width
+pbw <- 10
+
+pbw_char <- as.character(pbw)
+if (pbw < 10) pbw_char <- paste("0", pbw_char, sep="")
+
+# number of bootstrap samples/replications
+nreps <- 200
+
+# age bin centers
+abw <- 20 
+abinbeg <- -60 
+abinend <- 1950
+
+# array sizes
+maxrecs <- 2000
+maxreps <- 1000
+
+# plotting set up
+xmin <- 0; xmax <- 2020; ymin1 <- -1.0; ymax1 <- 1.0; ymin2 <- -5.0; ymax2 <- 5.0
+xlim=c(xmin,xmax); ylim1=c(ymin1,ymax1); ylim2 <- c(ymin2,ymax2)
+xlab="Year CE"; xminortick <- 50
+ylab="Normalized Anomalies of Transformed Influx"
+
+# plot output 
+plotout <- "screen" # "pdf" # 
+
+# no changes below here
+
+# prebinning file name
+binname <- paste("pbw", pbw_char, sep="")
+
+# presampled/binned files
+csvpath <- "/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_presamp_csv/"
+csvname <- paste("_presamp_influx_",basename,"_",binname,".csv", sep="")
+
+# site list file
+sitelistfile <- paste(sitelistpath, sitelist, ".csv", sep="")
+sitelistfile
+
+# curve (output) path and file
+curvecsvpath <- paste(datapath,queryname,"_curves/",sep="")
+
+# if output folder does not exist, create it
+dir.create(file.path(datapath, paste(queryname,"_curves/",sep="")), showWarnings=FALSE)
+curvename <- paste(sitelist,"_binboot_",basename,"_",binname,"_abw",as.character(abw),"_",
+  as.character(nreps), sep="")
+curvefile <- paste(curvename, ".csv", sep="")
+print(curvecsvpath)
+print(curvename)
+print(curvefile)
+
+# .pdf plot of bootstrap iterations
+if (plotout == "pdf") {
+pdffile <- paste(curvename, ".pdf", sep="")
+print(pdffile)
+}
+# .png plot of bootstrap iterations
+if (plotout == "png") {
+  pngfile <- paste(curvename, ".png", sep="")
+  print(pngfile)
+}
+
+
+# read the list of sites
+sites <- read.csv(sitelistfile)
+head(sites)
+ns <- length(sites[,1]) #length(sites$ID_SITE)
+ns
+
+# arrays for data and fitted values
+age <- matrix(NA, ncol=ns, nrow=maxrecs)
+influx <- matrix(NA, ncol=ns, nrow=maxrecs)
+nsamples <- rep(0, maxrecs)
+
+# age bin centers
+abinage <- seq(abinbeg, abinend, by=abw)
+abinage
+YearCE <- 1950 - abinage
+YearCE
+
+# generate YearCE with a 1/2 time-step (abw) offset so step-plot type "s" registers correctly
+pltYearCE <- YearCE  +  (abw/2)
+pltYearCE
+
+# array for bootstrap results
+min_age <- abinbeg-(abw/2); max_age <- abinend #+(abw/2)
+nbins <- length(abinage)
+yfit <- matrix(NA, nrow=nbins, ncol=maxreps)
+
+# arrays for sample number tracking
+ndec <- matrix(0, ncol=nbins, nrow=ns)
+ndec_tot <- rep(0, nbins)
+#xspan <- rep(0, ntarg)
+ninwin <- matrix(0, ncol=nbins, nrow=ns)
+ninwin_tot <- rep(0, nbins)
+
+
+
+# read and store the presample (binned) files as matrices of ages and influx values
+ii <- 0
+for (i in 1:ns) {
+  #i <- 1
+  sitenum <- sites[i,1] # sites$ID_SITE[i]
+  print(sitenum)
+  siteidchar <- as.character(sitenum)
+  if (sitenum >= 1) siteid <- paste("000", siteidchar, sep="")
+  if (sitenum >= 10) siteid <- paste("00", siteidchar, sep="")
+  if (sitenum >= 100) siteid <- paste("0", siteidchar, sep="")
+  if (sitenum >= 1000) siteid <- paste(    siteidchar, sep="")
+  
+  inputfile <- paste(csvpath, siteid, csvname, sep="")
+  print(inputfile)
+  
+  if (file.exists(inputfile)) {
+    indata <- read.csv(inputfile)
+    nsamp <-  length(indata$age) # 
+    if (nsamp > 0) {
+        ii <- ii+1
+        age[1:nsamp,ii] <- indata$age # 
+        influx[1:nsamp,ii] <- indata$norman # indata$zt # 
+        nsamples[ii] <- nsamp
+    }
+  }
+}
+nsites <- ii
+
+# number of sites with data
+nsites
+
+# trim samples to age range
+influx[age >= abinend+abw/2] <- NA
+age[age >= abinend+abw/2] <- NA
+
+# censor abs(influx) values > 10
+influx[abs(influx) >= 10] <- NA
+age[abs(influx) >= 10] <- NA
+
+
+# count number of sites that contributed to each fitted value
+ptm <- proc.time()
+for (i in 1:nbins) {
+  
+  for (j in 1:nsites) {
+    for (k in 1:nsamples[j]) {
+      if (!is.na(age[k,j])) {
+        ii <- as.integer(ceiling((age[k,j]-abinbeg-(abw/2.0))/abw))+1
+        #print (c(i,j,k,ii))
+        if (ii > 0 && ii <= nbins) {ndec[j,ii] = 1}
+        if (age[k,j] >= abinage[i]-(abw/2) && age[k,j] <= abinage[i]+(abw/2)) {ninwin[j,i] = 1}
+      }
+    }
+  }
+  ndec_tot[i] <- sum(ndec[,i])
+  ninwin_tot[i] <- sum(ninwin[,i])
+  # xspan[i] <- agemax - agemin
+}
+proc.time() - ptm
+head(cbind(1950 - abinage, pltYearCE, abinage,ndec_tot,ninwin_tot))
+tail(cbind(1950 - abinage, pltYearCE, abinage,ndec_tot,ninwin_tot))
+
+ptm <- proc.time()
+# 1. reshape matrices into vectors 
+x <- as.vector(age)
+y <- as.vector(influx)
+lfdata <- data.frame(x,y)
+lfdata <- na.omit(lfdata)
+lfdata <- lfdata[lfdata$x >= min_age & lfdata$x < max_age, ]
+x <- lfdata$x; y <- lfdata$y
+
+# average influx for each age bin
+
+binnum <- as.integer(ceiling((x-abinbeg-(abw/2.0))/abw))+1
+binave <- tapply(y, binnum, mean)
+binaveage <- tapply(x, binnum, mean)
+bin_fit_all <- binave
+binsubs_all <- as.integer(unlist(dimnames(binave)))
+
+binnum; length(binnum)
+binave; length(binave)
+binaveage; length(binaveage)
+bin_fit_all; length(bin_fit_all)
+abinage; length(abinage) 
+pltYearCE; length(pltYearCE) 
+
+head(cbind(1950 - binaveage, pltYearCE[binsubs_all], abinage[binsubs_all], bin_fit_all))
+tail(cbind(1950 - binaveage, pltYearCE[binsubs_all], abinage[binsubs_all], bin_fit_all))
+
+# Bootstrap samples
+
+# Step 1 -- Set up to plot individual replications
+if (plotout == "pdf") {pdf(file=paste(curvecsvpath,pdffile,sep=""))}
+if (plotout == "png") {png(file=paste(curvecsvpath,pngfile,sep=""), res=150)}
+plot(NULL, ylim=ylim2, xlim=xlim, ylab=ylab, xlab=xlab, cex.sub=0.8, sub=curvename, type="n")
+axis(side = 1, at = seq(xmin-xminortick, xmax+xminortick, by = xminortick), labels = FALSE, tcl = -.25)
+axis(side = 1, at = seq(xmin, xmax, by = xminortick*5), labels = FALSE, tcl = -.5) 
+
+# for debugging step plots
+# plot the bin averages -- note pltYearCE offset to center the plot steps
+# points(1950 - x, y, pch=16, cex=0.5, col=rgb(0.5,0.5,0.5,0.70))
+# lines(bin_fit_all ~ pltYearCE, type="s", col="red", lwd=2)
+# points(1950 - abinage, bin_fit_all, col="blue", pch=16, cex=0.5)
+
+set.seed(10) # do this to get the same sequence of random samples for each run
+
+# Step 2 -- Do the bootstrap iterations, and plot each age-bin curve
+ptm <- proc.time() # time the loop
+for (i in 1:nreps) {
+  print(i)
+  randsitenum <- sample(seq(1:nsites), nsites, replace=TRUE)
+  # print(head(randsitenum))
+  x <- as.vector(age[,randsitenum])
+  y <- as.vector(influx[,randsitenum])
+  lfdata <- data.frame(x,y)
+  lfdata <- na.omit(lfdata)
+  lfdata <- lfdata[lfdata$x >= min_age & lfdata$x < max_age, ]
+  x <- lfdata$x; y <- lfdata$y
+  
+  binnum <- as.integer(ceiling((x-abinbeg-(abw/2.0))/abw))+1
+  binave <- tapply(y, binnum, mean)
+  binaveage <- tapply(x, binnum, mean)
+  binsubs <- as.integer(unlist(dimnames(binave)))
+  #bin_fit <- binave[binsubs]
+  yfit[binsubs,i] <- binave
+  segments(pltYearCE-1.9*(abw/2), yfit[,i], pltYearCE-0.1*(abw/2), yfit[,i], lwd=0.6, col=rgb(0.3,0.3,0.3,0.25))
+}
+proc.time() - ptm # how long?
+
+# Step 3 -- Plot the unresampled (initial) area averages
+lines(pltYearCE[binsubs_all], bin_fit_all, type="s", lwd=1, col="red")
+segments(pltYearCE[nbins]-abw, bin_fit_all[nbins], pltYearCE[nbins], bin_fit_all[nbins], lwd=1, col="red")
+#points(pltYearCE[binsubs_all], bin_fit_all, pch="_", cex=0.8, col="blue")
+
+# Step 4 -- Find and add bootstrap CIs
+yfit975 <- apply(yfit, 1, function(x) quantile(x,prob=0.975, na.rm=T))
+yfit025 <- apply(yfit, 1, function(x) quantile(x,prob=0.025, na.rm=T))
+yfit50 <- apply(yfit, 1, function(x) quantile(x,prob=0.500, na.rm=T))
+
+lines(pltYearCE, yfit975, type="s", lwd=0.5, col="red")
+segments(pltYearCE[nbins]-abw, yfit975[nbins], pltYearCE[nbins], yfit975[nbins], lwd=1, col="red")
+lines(pltYearCE, yfit025, type="s", lwd=0.5, col="red")
+segments(pltYearCE[nbins]-abw, yfit025[nbins], pltYearCE[nbins], yfit025[nbins], lwd=1, col="red")
+
+if (plotout == "pdf") {dev.off()}
+if (plotout == "png") {dev.off()}
+curveout <- data.frame(cbind(abinage, 1950-abinage, bin_fit_all, yfit975, yfit025, ndec_tot, ninwin_tot))
+colnames(curveout) <- c("age", "YearCE", "bin_ave", "cu95", "cl95", "nsites", "ninwin")
+outputfile <- paste(curvecsvpath, curvefile, sep="")
+write.table(curveout, outputfile, col.names=TRUE, row.names=FALSE, sep=",")
+```
+
+
+

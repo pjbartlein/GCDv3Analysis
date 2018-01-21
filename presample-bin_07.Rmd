@@ -1,0 +1,191 @@
+---
+title: "Presampling or binning of transformed data (presample-bin.R)"
+output:
+  html_document:
+    css: SI-md-08.css
+    fig_caption: yes
+    highlight: haddock
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_float: false
+    collapsed: no
+---
+
+```{r presample-bin, echo=FALSE}
+options(width = 105)
+knitr::opts_chunk$set(dev='png', dpi=300, cache=TRUE)
+pdf.options(useDingbats = TRUE)
+```
+
+# Introduction #
+
+The purpose of this script (`presample-bin.R`) is to "presample" or bin the transformed data.  Charcoal data is available at all kinds of "native" resolutions, from samples that represent decades or centuries (or longer) to those that represent annual deposition.  Further, some records have been interpolated to pseudo-annual time steps.  In developing composite curves, those records with higher resolutions will contribute disproportionately to the curve.  There are two general approaches for dealing with this:  1) weighting individual charcoal (influx or concentration) values according to their resolution, with lower-resolution records receiving higher weights, and vice-versa, or 2) reducing the sampling frequency of the records to some common interval (without interpolating or creating pseudo data).
+
+We adopted the latter approach because it was more transparent, and because the weighting approach was highly sensitive to the particular weighting scheme adopted.  The binning or "presampling" works by creating a set of target bins, typically at decadal or bidecadal intervals, and then processing each record as follows:  If a particular record has multiple samples that fall within a specific bin, they are combined by simple averaging, if a particular record has a single sample that falls within a specific bin, that value is adopted as the value for the bin, but if a particular record has no values that fall within a specific bin, none are created by interpolation. The approach implemented here in R differs slightly from the original Fortran implementation, but not in any appreciable way.  There are two main parts to this script:  1) a set-up part that contains path and file names, along with the base-period specifiation (that change from run-to-run), and 2) the calculation part that generally does not change.
+
+The bins are defined by their midpoints, and the following expression places individual samples into an appropriate bin:
+
+```{r binnum, eval=FALSE}
+# this definition of bin number seems to match that implicit in presample.f90
+binnum <- as.integer(ceiling((sitedata$est_age-targbeg-(targstep/2))/targstep))+1
+```
+
+# Set up
+
+The first step is set various path names and base-period parameter values.  The `queryname` is used to compose file and pathnames, `datapath` specifies the folder where the input and output data reside, and `sitelistpath` and `sitelistfile` specify a particular list of sites to be processed.
+
+```{r pathnames}
+# presample-bin.R
+# presamples, or bins the transformed data into evenly spaced bins with no interpolation  
+
+# paths for input and output .csv files -- modify as appropriate
+queryname <- "v3i"
+datapath <- "/Projects/GPWG/GPWGv3/GCDv3Data/v3i_Rscripts/"
+sitelistpath <- "/Projects/GPWG/GPWGv3/GCDv3Data/v3i_Rscripts/v3i_sitelists/"
+sitelist <- "v3i_nsa_globe"
+```
+
+The `basename` is that used in `trans-and-zscore.R` to identify a particular base period that was used to transform the data.  The structure of the bins is defined by a starting and ending age, and interval.
+
+```{r setBinstructure}
+## set basename and bin structure
+basename <- "zt21k"
+targbeg <- -60
+targend <- 22000
+targstep <- 20
+```
+
+Set up a debugging (log) file.
+
+```{r debug}
+# debug/log file
+debugpath <- "/Projects/GPWG/GPWGv3/GCDv3Data/v3i_Rscripts/v3i_debug/"
+# if debug folder does not exist, create it
+dir.create(file.path(debugpath), showWarnings=FALSE)
+debugname <- "presample-bin_debug.txt"
+# open the debug/log file
+debugfile <- file(paste(debugpath, debugname, sep=""), "w")
+```
+
+# Calculation #
+
+## Initial steps ##
+
+First, various folders and filenames are created.  The `dir.create()` function is used to create the folders if they do not already exist.
+
+```{r pathnames2}
+# no changes below here
+# various path and filenames
+sitelistfile <- paste(sitelistpath, sitelist, ".csv", sep="")
+transcsvpath <- paste(datapath,queryname,"_trans_csv/",sep="")
+presampcsvpath <- paste(datapath,queryname,"_presamp_csv/",sep="")
+# if output folder does not exist, create it
+dir.create(file.path(datapath, paste(queryname,"_presamp_csv/",sep="")), showWarnings=FALSE)
+```
+
+Define the bins
+
+```{r binDefinition}
+# bin center (target points) definition
+targage <- seq(targbeg, targend, by=targstep)
+```
+
+Read the list of sites to be processed.
+
+```{r readSitelist}
+# read list of sites
+ptm <- proc.time()
+sites <- read.csv(sitelistfile, stringsAsFactors=FALSE)
+nsites <- length(sites[,1])
+print(nsites)
+```
+
+## Main loop ##
+
+Loop over the sites, doing the following for each:
+
+1. Compose the trans-and-zscore .csv file name
+2. Read the input data
+3. Count the number of nonmissing (non-NA) and infinite influx values
+4. Find bin number of each sample
+5. Get average zt values (and average ages) for the data in each bin
+6. Get bin numbers of each bin that had an average (or a single) value
+7. Write output
+
+Step 3 determines the number of nonmissing (NA) values of zt for each site, and the number of those nonmissing values that are not infinite (Inf).  If there are no nonmissing or noninfinite values, the site is skipped.  Average ages of the point in the bin are calculated, but not currently used.
+
+```{r main loop, eval=TRUE,  warning=FALSE} 
+# main loop
+for (j in seq(1,nsites)) {
+
+  # 1. Compose the trans-and-zscore .csv file name
+  sitenum <- sites[j,1]
+  sitename <- as.character(sites[j,5])
+  siteidchar <- as.character(sitenum)
+  if (sitenum >= 1) siteid <- paste("000", siteidchar, sep="")
+  if (sitenum >= 10) siteid <- paste("00", siteidchar, sep="")
+  if (sitenum >= 100) siteid <- paste("0", siteidchar, sep="")
+  if (sitenum >= 1000) siteid <- paste(    siteidchar, sep="")
+  inputfile <- paste(transcsvpath, siteid, "_trans_influx_",basename,".csv", sep="")
+  
+  if (file.exists(inputfile)) {
+    
+    # 2. Read the input data
+    sitedata <- read.csv(inputfile)
+    nsamp <- length(sitedata$zt)
+    nsampchar <- as.character(nsamp)
+    writeLines(paste("Site",siteidchar,nsampchar,"samples", sep=" "), con = debugfile, sep = "\n")
+    
+    # 3. Count the number of nonmissing (non-NA) and infinite influx values
+    nonmiss <- na.omit(sitedata$zt)
+    numnonmiss <- length(nonmiss)
+    numinf <- sum(is.infinite(nonmiss))
+    numnonmiss; numinf
+    
+    if (length(nonmiss) > 0 & numinf < numnonmiss) {
+    
+      # add a column of 1's for counting
+      sitedata$one <- rep(1,length(sitedata[,1]))
+      
+      # 4. Find bin number of each sample
+      # this definition of bin number seems to match that implicit in presample.f90
+      binnum <- as.integer(ceiling((sitedata$est_age-targbeg-(targstep/2))/targstep))+1
+      
+      # uncommenting the following reveals how each sample is assigned to a bin
+      #head(cbind(sitedata$est_age,sitedata$zt,binnum,targage[binnum]), nsamp)
+      
+      # 5. Get average zt values (and average ages) for the data in each bin
+      binave <- tapply(sitedata$zt, binnum, mean)
+      binaveage <- tapply(sitedata$est_age, binnum, mean)
+      bincount <- tapply(sitedata$one, binnum, sum)
+      
+      # 6. Get bin numbers of each bin that had an average (or a single) value
+      binsub <- as.numeric(unlist(dimnames(binave)))  
+      
+      # 7. Write output
+      presampout <- data.frame(targage[binsub],binave,bincount)
+      presampout <- na.omit(presampout)
+      colnames(presampout) <- c("age", "zt", "np")
+   
+      outputfile <- paste(presampcsvpath, siteid, "_presamp_influx_",basename,"_bw",
+        as.character(targstep),".csv", sep="")
+      write.table(presampout, outputfile, col.names=TRUE, row.names=FALSE, sep=",")
+      }
+    
+    }
+  
+}
+```
+
+How long did this take?
+
+```{r howLong}
+proc.time() - ptm
+```
+
+As the loop executes, one block of information for each site will be printed.
+
+```{r printExample, echo=FALSE}
+cat(" [1] 1 \n [1] 1 \n [1] \"Cygnet\" \n [1] \"/Projects/GPWG/GPWGv3/data/v3i/v3i_trans_csv/0001_trans_influx_zt-lme.csv\" \n ...")
+```
