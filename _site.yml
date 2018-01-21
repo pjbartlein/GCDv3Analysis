@@ -1,6 +1,6 @@
-name: GCD Analysis
+name: GCDv3 Analysis
 navbar:
-  title: GCD Analysis
+  title: GCDv3 Analysis
   left:
   - text: Overview
     href: Overview.html

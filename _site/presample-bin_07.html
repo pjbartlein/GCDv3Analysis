@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Presampling or binning of transformed data (presample-bin.R)</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/united.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #0000ff; } /* Keyword */
+code > span.ch { color: #008080; } /* Char */
+code > span.st { color: #008080; } /* String */
+code > span.co { color: #008000; } /* Comment */
+code > span.ot { color: #ff4000; } /* Other */
+code > span.al { color: #ff0000; } /* Alert */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #008000; font-weight: bold; } /* Warning */
+code > span.cn { } /* Constant */
+code > span.sc { color: #008080; } /* SpecialChar */
+code > span.vs { color: #008080; } /* VerbatimString */
+code > span.ss { color: #008080; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { } /* Variable */
+code > span.cf { color: #0000ff; } /* ControlFlow */
+code > span.op { } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #ff4000; } /* Preprocessor */
+code > span.do { color: #008000; } /* Documentation */
+code > span.an { color: #008000; } /* Annotation */
+code > span.cv { color: #008000; } /* CommentVar */
+code > span.at { } /* Attribute */
+code > span.in { color: #008000; } /* Information */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="SI-md-08.css" type="text/css" />
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">GCDv3 Analysis</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="Overview.html">Overview</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Analyses
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li class="dropdown-header">Standard analysis</li>
+    <li>
+      <a href="mdb-to-csv_07.html">Query and site .csv files from an Access database (mdb-to-csv.R)</a>
+    </li>
+    <li>
+      <a href="trans-and-zscore_07.html">Box-Cox transformation and Z-Score rescaling (trans-and-zscore.R)</a>
+    </li>
+    <li>
+      <a href="presample-bin_07.html">Presampling or binning of transformed data (presample-bin.R)</a>
+    </li>
+    <li>
+      <a href="smooth-curve_07.html">Composite curves and bootstrap C.I.'s using locfit() (smooth-curve.R)</a>
+    </li>
+    <li class="dropdown-header">Alternative approaches</li>
+    <li>
+      <a href="trans-and-norman_10.html">Box-Cox transformation and normalized anomaly rescaling (trans-and-norman.R)</a>
+    </li>
+    <li>
+      <a href="bin-boot_10.html">Composite curves and bootstrap C.I.'s via binning</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Code
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li class="dropdown-header">Standard analysis</li>
+    <li>
+      <a href="mdb-to-csv_07_code.html">mdb-to-csv_code.R</a>
+    </li>
+    <li>
+      <a href="trans-and-zscore_07_code.html">trans-and-zscore.R</a>
+    </li>
+    <li>
+      <a href="presample-bin_07_code.html">presample-bin.R</a>
+    </li>
+    <li>
+      <a href="smooth-curve_07_code.html">smooth-curve.R</a>
+    </li>
+    <li class="dropdown-header">Alternative approaches</li>
+    <li>
+      <a href="mdb-to-csv_07_code_osx.html">mdb-to-csv_code_osx.R</a>
+    </li>
+    <li>
+      <a href="trans-and-norman_10_code.html">trans-and-norman.R</a>
+    </li>
+    <li>
+      <a href="bin-boot_10_code.html">bin-boot.R</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Presampling or binning of transformed data (presample-bin.R)</h1>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#introduction"><span class="toc-section-number">1</span> Introduction</a></li>
+<li><a href="#set-up"><span class="toc-section-number">2</span> Set up</a></li>
+<li><a href="#calculation"><span class="toc-section-number">3</span> Calculation</a><ul>
+<li><a href="#initial-steps"><span class="toc-section-number">3.1</span> Initial steps</a></li>
+<li><a href="#main-loop"><span class="toc-section-number">3.2</span> Main loop</a></li>
+</ul></li>
+</ul>
+</div>
+
+<div id="introduction" class="section level1">
+<h1><span class="header-section-number">1</span> Introduction</h1>
+<p>The purpose of this script (<code>presample-bin.R</code>) is to “presample” or bin the transformed data. Charcoal data is available at all kinds of “native” resolutions, from samples that represent decades or centuries (or longer) to those that represent annual deposition. Further, some records have been interpolated to pseudo-annual time steps. In developing composite curves, those records with higher resolutions will contribute disproportionately to the curve. There are two general approaches for dealing with this: 1) weighting individual charcoal (influx or concentration) values according to their resolution, with lower-resolution records receiving higher weights, and vice-versa, or 2) reducing the sampling frequency of the records to some common interval (without interpolating or creating pseudo data).</p>
+<p>We adopted the latter approach because it was more transparent, and because the weighting approach was highly sensitive to the particular weighting scheme adopted. The binning or “presampling” works by creating a set of target bins, typically at decadal or bidecadal intervals, and then processing each record as follows: If a particular record has multiple samples that fall within a specific bin, they are combined by simple averaging, if a particular record has a single sample that falls within a specific bin, that value is adopted as the value for the bin, but if a particular record has no values that fall within a specific bin, none are created by interpolation. The approach implemented here in R differs slightly from the original Fortran implementation, but not in any appreciable way. There are two main parts to this script: 1) a set-up part that contains path and file names, along with the base-period specifiation (that change from run-to-run), and 2) the calculation part that generally does not change.</p>
+<p>The bins are defined by their midpoints, and the following expression places individual samples into an appropriate bin:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># this definition of bin number seems to match that implicit in presample.f90</span>
+binnum &lt;-<span class="st"> </span><span class="kw">as.integer</span>(<span class="kw">ceiling</span>((sitedata<span class="op">$</span>est_age<span class="op">-</span>targbeg<span class="op">-</span>(targstep<span class="op">/</span><span class="dv">2</span>))<span class="op">/</span>targstep))<span class="op">+</span><span class="dv">1</span></code></pre></div>
+</div>
+<div id="set-up" class="section level1">
+<h1><span class="header-section-number">2</span> Set up</h1>
+<p>The first step is set various path names and base-period parameter values. The <code>queryname</code> is used to compose file and pathnames, <code>datapath</code> specifies the folder where the input and output data reside, and <code>sitelistpath</code> and <code>sitelistfile</code> specify a particular list of sites to be processed.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># presample-bin.R</span>
+<span class="co"># presamples, or bins the transformed data into evenly spaced bins with no interpolation  </span>
+
+<span class="co"># paths for input and output .csv files -- modify as appropriate</span>
+queryname &lt;-<span class="st"> &quot;v3i&quot;</span>
+datapath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i_Rscripts/&quot;</span>
+sitelistpath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i_Rscripts/v3i_sitelists/&quot;</span>
+sitelist &lt;-<span class="st"> &quot;v3i_nsa_globe&quot;</span></code></pre></div>
+<p>The <code>basename</code> is that used in <code>trans-and-zscore.R</code> to identify a particular base period that was used to transform the data. The structure of the bins is defined by a starting and ending age, and interval.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## set basename and bin structure
+basename &lt;-<span class="st"> &quot;zt21k&quot;</span>
+targbeg &lt;-<span class="st"> </span><span class="op">-</span><span class="dv">60</span>
+targend &lt;-<span class="st"> </span><span class="dv">22000</span>
+targstep &lt;-<span class="st"> </span><span class="dv">20</span></code></pre></div>
+<p>Set up a debugging (log) file.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># debug/log file</span>
+debugpath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i_Rscripts/v3i_debug/&quot;</span>
+<span class="co"># if debug folder does not exist, create it</span>
+<span class="kw">dir.create</span>(<span class="kw">file.path</span>(debugpath), <span class="dt">showWarnings=</span><span class="ot">FALSE</span>)
+debugname &lt;-<span class="st"> &quot;presample-bin_debug.txt&quot;</span>
+<span class="co"># open the debug/log file</span>
+debugfile &lt;-<span class="st"> </span><span class="kw">file</span>(<span class="kw">paste</span>(debugpath, debugname, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>), <span class="st">&quot;w&quot;</span>)</code></pre></div>
+</div>
+<div id="calculation" class="section level1">
+<h1><span class="header-section-number">3</span> Calculation</h1>
+<div id="initial-steps" class="section level2">
+<h2><span class="header-section-number">3.1</span> Initial steps</h2>
+<p>First, various folders and filenames are created. The <code>dir.create()</code> function is used to create the folders if they do not already exist.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># no changes below here</span>
+<span class="co"># various path and filenames</span>
+sitelistfile &lt;-<span class="st"> </span><span class="kw">paste</span>(sitelistpath, sitelist, <span class="st">&quot;.csv&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+transcsvpath &lt;-<span class="st"> </span><span class="kw">paste</span>(datapath,queryname,<span class="st">&quot;_trans_csv/&quot;</span>,<span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+presampcsvpath &lt;-<span class="st"> </span><span class="kw">paste</span>(datapath,queryname,<span class="st">&quot;_presamp_csv/&quot;</span>,<span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+<span class="co"># if output folder does not exist, create it</span>
+<span class="kw">dir.create</span>(<span class="kw">file.path</span>(datapath, <span class="kw">paste</span>(queryname,<span class="st">&quot;_presamp_csv/&quot;</span>,<span class="dt">sep=</span><span class="st">&quot;&quot;</span>)), <span class="dt">showWarnings=</span><span class="ot">FALSE</span>)</code></pre></div>
+<p>Define the bins</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># bin center (target points) definition</span>
+targage &lt;-<span class="st"> </span><span class="kw">seq</span>(targbeg, targend, <span class="dt">by=</span>targstep)</code></pre></div>
+<p>Read the list of sites to be processed.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># read list of sites</span>
+ptm &lt;-<span class="st"> </span><span class="kw">proc.time</span>()
+sites &lt;-<span class="st"> </span><span class="kw">read.csv</span>(sitelistfile, <span class="dt">stringsAsFactors=</span><span class="ot">FALSE</span>)
+nsites &lt;-<span class="st"> </span><span class="kw">length</span>(sites[,<span class="dv">1</span>])
+<span class="kw">print</span>(nsites)</code></pre></div>
+<pre><code>## [1] 703</code></pre>
+</div>
+<div id="main-loop" class="section level2">
+<h2><span class="header-section-number">3.2</span> Main loop</h2>
+<p>Loop over the sites, doing the following for each:</p>
+<ol style="list-style-type: decimal">
+<li>Compose the trans-and-zscore .csv file name</li>
+<li>Read the input data</li>
+<li>Count the number of nonmissing (non-NA) and infinite influx values</li>
+<li>Find bin number of each sample</li>
+<li>Get average zt values (and average ages) for the data in each bin</li>
+<li>Get bin numbers of each bin that had an average (or a single) value</li>
+<li>Write output</li>
+</ol>
+<p>Step 3 determines the number of nonmissing (NA) values of zt for each site, and the number of those nonmissing values that are not infinite (Inf). If there are no nonmissing or noninfinite values, the site is skipped. Average ages of the point in the bin are calculated, but not currently used.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># main loop</span>
+<span class="cf">for</span> (j <span class="cf">in</span> <span class="kw">seq</span>(<span class="dv">1</span>,nsites)) {
+
+  <span class="co"># 1. Compose the trans-and-zscore .csv file name</span>
+  sitenum &lt;-<span class="st"> </span>sites[j,<span class="dv">1</span>]
+  sitename &lt;-<span class="st"> </span><span class="kw">as.character</span>(sites[j,<span class="dv">5</span>])
+  siteidchar &lt;-<span class="st"> </span><span class="kw">as.character</span>(sitenum)
+  <span class="cf">if</span> (sitenum <span class="op">&gt;=</span><span class="st"> </span><span class="dv">1</span>) siteid &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;000&quot;</span>, siteidchar, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+  <span class="cf">if</span> (sitenum <span class="op">&gt;=</span><span class="st"> </span><span class="dv">10</span>) siteid &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;00&quot;</span>, siteidchar, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+  <span class="cf">if</span> (sitenum <span class="op">&gt;=</span><span class="st"> </span><span class="dv">100</span>) siteid &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;0&quot;</span>, siteidchar, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+  <span class="cf">if</span> (sitenum <span class="op">&gt;=</span><span class="st"> </span><span class="dv">1000</span>) siteid &lt;-<span class="st"> </span><span class="kw">paste</span>(    siteidchar, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+  inputfile &lt;-<span class="st"> </span><span class="kw">paste</span>(transcsvpath, siteid, <span class="st">&quot;_trans_influx_&quot;</span>,basename,<span class="st">&quot;.csv&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+  
+  <span class="cf">if</span> (<span class="kw">file.exists</span>(inputfile)) {
+    
+    <span class="co"># 2. Read the input data</span>
+    sitedata &lt;-<span class="st"> </span><span class="kw">read.csv</span>(inputfile)
+    nsamp &lt;-<span class="st"> </span><span class="kw">length</span>(sitedata<span class="op">$</span>zt)
+    nsampchar &lt;-<span class="st"> </span><span class="kw">as.character</span>(nsamp)
+    <span class="kw">writeLines</span>(<span class="kw">paste</span>(<span class="st">&quot;Site&quot;</span>,siteidchar,nsampchar,<span class="st">&quot;samples&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>), <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    
+    <span class="co"># 3. Count the number of nonmissing (non-NA) and infinite influx values</span>
+    nonmiss &lt;-<span class="st"> </span><span class="kw">na.omit</span>(sitedata<span class="op">$</span>zt)
+    numnonmiss &lt;-<span class="st"> </span><span class="kw">length</span>(nonmiss)
+    numinf &lt;-<span class="st"> </span><span class="kw">sum</span>(<span class="kw">is.infinite</span>(nonmiss))
+    numnonmiss; numinf
+    
+    <span class="cf">if</span> (<span class="kw">length</span>(nonmiss) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span> <span class="op">&amp;</span><span class="st"> </span>numinf <span class="op">&lt;</span><span class="st"> </span>numnonmiss) {
+    
+      <span class="co"># add a column of 1&#39;s for counting</span>
+      sitedata<span class="op">$</span>one &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">1</span>,<span class="kw">length</span>(sitedata[,<span class="dv">1</span>]))
+      
+      <span class="co"># 4. Find bin number of each sample</span>
+      <span class="co"># this definition of bin number seems to match that implicit in presample.f90</span>
+      binnum &lt;-<span class="st"> </span><span class="kw">as.integer</span>(<span class="kw">ceiling</span>((sitedata<span class="op">$</span>est_age<span class="op">-</span>targbeg<span class="op">-</span>(targstep<span class="op">/</span><span class="dv">2</span>))<span class="op">/</span>targstep))<span class="op">+</span><span class="dv">1</span>
+      
+      <span class="co"># uncommenting the following reveals how each sample is assigned to a bin</span>
+      <span class="co">#head(cbind(sitedata$est_age,sitedata$zt,binnum,targage[binnum]), nsamp)</span>
+      
+      <span class="co"># 5. Get average zt values (and average ages) for the data in each bin</span>
+      binave &lt;-<span class="st"> </span><span class="kw">tapply</span>(sitedata<span class="op">$</span>zt, binnum, mean)
+      binaveage &lt;-<span class="st"> </span><span class="kw">tapply</span>(sitedata<span class="op">$</span>est_age, binnum, mean)
+      bincount &lt;-<span class="st"> </span><span class="kw">tapply</span>(sitedata<span class="op">$</span>one, binnum, sum)
+      
+      <span class="co"># 6. Get bin numbers of each bin that had an average (or a single) value</span>
+      binsub &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">unlist</span>(<span class="kw">dimnames</span>(binave)))  
+      
+      <span class="co"># 7. Write output</span>
+      presampout &lt;-<span class="st"> </span><span class="kw">data.frame</span>(targage[binsub],binave,bincount)
+      presampout &lt;-<span class="st"> </span><span class="kw">na.omit</span>(presampout)
+      <span class="kw">colnames</span>(presampout) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;age&quot;</span>, <span class="st">&quot;zt&quot;</span>, <span class="st">&quot;np&quot;</span>)
+   
+      outputfile &lt;-<span class="st"> </span><span class="kw">paste</span>(presampcsvpath, siteid, <span class="st">&quot;_presamp_influx_&quot;</span>,basename,<span class="st">&quot;_bw&quot;</span>,
+        <span class="kw">as.character</span>(targstep),<span class="st">&quot;.csv&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+      <span class="kw">write.table</span>(presampout, outputfile, <span class="dt">col.names=</span><span class="ot">TRUE</span>, <span class="dt">row.names=</span><span class="ot">FALSE</span>, <span class="dt">sep=</span><span class="st">&quot;,&quot;</span>)
+      }
+    
+    }
+  
+}</code></pre></div>
+<p>How long did this take?</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">proc.time</span>() <span class="op">-</span><span class="st"> </span>ptm</code></pre></div>
+<pre><code>##    user  system elapsed 
+##    6.38    0.79    7.59</code></pre>
+<p>As the loop executes, one block of information for each site will be printed.</p>
+<pre><code>##  [1] 1 
+##  [1] 1 
+##  [1] &quot;Cygnet&quot; 
+##  [1] &quot;/Projects/GPWG/GPWGv3/data/v3i/v3i_trans_csv/0001_trans_influx_zt-lme.csv&quot; 
+##  ...</code></pre>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
