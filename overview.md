@@ -45,7 +45,9 @@ The main part of the script loops over the individual sites that are specified i
 - calculation of alternative quantities (e.g. influx, given concentrations)
 - writing out a .csv file for each site
 
-The calculation of sedimentation rates and deposition times is required for the conversion of concentration values to influx values and vice-versa.  Various checks for age reversals, zero sedimentation rates, missing data are done.  Typically, when a number of sites are added to the database, there will be issues, when are flagged by this step and resolved.  In the example, such is is the case, but the script illustrates those checks in any case.  The last part of this analysis step involves writing out one "site" .csv file for each site.
+The calculation of sedimentation rates and deposition times is required for the conversion of concentration values to influx values and vice-versa.  Various checks for age reversals, zero sedimentation rates, missing data are done.  Typically, when a number of sites are added to the database, there will be issues, when are flagged by this step and resolved.  In the example, such is is the case, but the script illustrates those checks in any case.  The last part of this analysis step involves writing out one "site data" .csv file for each site (e.g. `0001_data.csv`), plus a single sitelist file (e.g. `v3i_all.csv`)
+
+New data not included in the database can be added to the analysis by creating by hand a "site data" .csv file with the same format as those created by `mdb-to-csv.R` and adding a line to the sitelist file. 
 
 ## 2 Transformation and standardization/anomalization ##
 
