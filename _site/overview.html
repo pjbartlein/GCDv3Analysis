@@ -295,7 +295,8 @@ $(document).ready(function () {
 <li>calculation of alternative quantities (e.g. influx, given concentrations)</li>
 <li>writing out a .csv file for each site</li>
 </ul>
-<p>The calculation of sedimentation rates and deposition times is required for the conversion of concentration values to influx values and vice-versa. Various checks for age reversals, zero sedimentation rates, missing data are done. Typically, when a number of sites are added to the database, there will be issues, when are flagged by this step and resolved. In the example, such is is the case, but the script illustrates those checks in any case. The last part of this analysis step involves writing out one “site” .csv file for each site.</p>
+<p>The calculation of sedimentation rates and deposition times is required for the conversion of concentration values to influx values and vice-versa. Various checks for age reversals, zero sedimentation rates, missing data are done. Typically, when a number of sites are added to the database, there will be issues, which are flagged by this step and resolved. In the example, such is not the case, but the script illustrates those checks in any case. The last part of this analysis step involves writing out one “site data” .csv file for each site (e.g. <code>0001_data.csv</code>), plus a single “sitelist” file (e.g. <code>v3i_all.csv</code>), which can be edited to control the particular selection of sites that are analyzed.</p>
+<p>New data not included in the database can be added to the analysis by creating by hand a “site data” .csv file with the same format as those created by <code>mdb-to-csv.R</code> and adding a line to the sitelist file.</p>
 </div>
 <div id="transformation-and-standardizationanomalization" class="section level2">
 <h2>2 Transformation and standardization/anomalization</h2>
