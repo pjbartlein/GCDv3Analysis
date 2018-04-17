@@ -41,8 +41,8 @@ The first step is set various path names and base-period parameter values.  The 
 
 # paths for input and output .csv files -- modify as appropriate
 queryname <- "v3i"
-datapath <- "/Projects/GPWG/GPWGv3/GCDv3Data/v3i_Rscripts/"
-sitelistpath <- "/Projects/GPWG/GPWGv3/GCDv3Data/v3i_Rscripts/v3i_sitelists/"
+datapath <- "/Projects/GPWG/GPWGv3/GCDv3Data/v3i/"
+sitelistpath <- "/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_sitelists/"
 sitelist <- "v3i_nsa_globe"
 ```
 

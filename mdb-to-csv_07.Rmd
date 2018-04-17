@@ -89,7 +89,7 @@ miss <- -9999.0
 
 ## Database connection setup ##
 
-Note that the connection to the particular Access database (`GCDv03_Marlon_et_al_2015.mdb`) is established externally to R using (on Windows) the Data Sources tool (i.e. Control Panel > Administrative Tools > Data Sources (ODBC)).  On the Mac, the *Actual ODBC Driver for Access* at http://www.actualtech.com/ work, but requiers some configuration, as well as compilation of the `RODBC` package.  See the code file `mdb-to-csv_osx.R`.
+Note that the connection to the particular Access database (`GCDv03_Marlon_et_al_2015.mdb`) is established externally to R using (on Windows) the Data Sources tool (i.e. Control Panel > Administrative Tools > Data Sources (ODBC)).  On the Mac, the *Actual ODBC Driver for Access* at http://www.actualtech.com/ works, but requires some configuration, as well as compilation of the `RODBC` package.  See the code file `mdb-to-csv_osx.R`.
 
 ## Connect to the database and get some info ##
 

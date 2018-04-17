@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>mdb-to-csv.R</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/united.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #0000ff; } /* Keyword */
+code > span.ch { color: #008080; } /* Char */
+code > span.st { color: #008080; } /* String */
+code > span.co { color: #008000; } /* Comment */
+code > span.ot { color: #ff4000; } /* Other */
+code > span.al { color: #ff0000; } /* Alert */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #008000; font-weight: bold; } /* Warning */
+code > span.cn { } /* Constant */
+code > span.sc { color: #008080; } /* SpecialChar */
+code > span.vs { color: #008080; } /* VerbatimString */
+code > span.ss { color: #008080; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { } /* Variable */
+code > span.cf { color: #0000ff; } /* ControlFlow */
+code > span.op { } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #ff4000; } /* Preprocessor */
+code > span.do { color: #008000; } /* Documentation */
+code > span.an { color: #008000; } /* Annotation */
+code > span.cv { color: #008000; } /* CommentVar */
+code > span.at { } /* Attribute */
+code > span.in { color: #008000; } /* Information */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="SI-md-08.css" type="text/css" />
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">GCDv3 Analysis</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="Overview.html">Overview</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Analyses
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li class="dropdown-header">Standard analysis</li>
+    <li>
+      <a href="mdb-to-csv_07.html">Query and site .csv files from an Access database (mdb-to-csv.R)</a>
+    </li>
+    <li>
+      <a href="trans-and-zscore_07.html">Box-Cox transformation and Z-Score rescaling (trans-and-zscore.R)</a>
+    </li>
+    <li>
+      <a href="presample-bin_07.html">Presampling or binning of transformed data (presample-bin.R)</a>
+    </li>
+    <li>
+      <a href="smooth-curve_07.html">Composite curves and bootstrap C.I.'s using locfit() (smooth-curve.R)</a>
+    </li>
+    <li class="dropdown-header">Alternative approaches</li>
+    <li>
+      <a href="trans-and-norman_10.html">Box-Cox transformation and normalized anomaly rescaling (trans-and-norman.R)</a>
+    </li>
+    <li>
+      <a href="bin-boot_10.html">Composite curves and bootstrap C.I.'s via binning</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Code
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li class="dropdown-header">Standard analysis</li>
+    <li>
+      <a href="mdb-to-csv_07_code.html">mdb-to-csv_code.R</a>
+    </li>
+    <li>
+      <a href="trans-and-zscore_07_code.html">trans-and-zscore.R</a>
+    </li>
+    <li>
+      <a href="presample-bin_07_code.html">presample-bin.R</a>
+    </li>
+    <li>
+      <a href="smooth-curve_07_code.html">smooth-curve.R</a>
+    </li>
+    <li class="dropdown-header">Alternative approaches</li>
+    <li>
+      <a href="mdb-to-csv_07_code_osx.html">mdb-to-csv_code_osx.R</a>
+    </li>
+    <li>
+      <a href="trans-and-norman_10_code.html">trans-and-norman.R</a>
+    </li>
+    <li>
+      <a href="bin-boot_10_code.html">bin-boot.R</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">mdb-to-csv.R</h1>
+
+</div>
+
+
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># mdb-to-query.R</span>
+<span class="co"># directly reads an Access database and creates individual site .csv files</span>
+
+<span class="co"># database name</span>
+dbname &lt;-<span class="st"> &quot;GCDv03_Marlon_et_al_2015.mdb&quot;</span>
+
+<span class="co"># query label and path to query and query name</span>
+datapath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/&quot;</span>
+querypath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_query/&quot;</span>
+
+<span class="co"># if the query output folder does not exist, create it</span>
+<span class="kw">dir.create</span>(<span class="kw">file.path</span>(querypath), <span class="dt">showWarnings=</span><span class="ot">FALSE</span>)
+
+<span class="co"># query file names</span>
+querysitename &lt;-<span class="st"> &quot;v3i_sites.csv&quot;</span>
+querydataname &lt;-<span class="st"> &quot;v3i_data.csv&quot;</span>
+
+<span class="co"># path to .csv output</span>
+csvpath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_sites_csv/&quot;</span>
+<span class="co"># if output folder does not exist, create it</span>
+<span class="kw">dir.create</span>(<span class="kw">file.path</span>(csvpath), <span class="dt">showWarnings=</span><span class="ot">FALSE</span>)
+
+<span class="co"># path to sitelist output</span>
+sitelistpath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_sitelists/&quot;</span>
+<span class="co"># if output folder does not exist, create it</span>
+<span class="kw">dir.create</span>(<span class="kw">file.path</span>(sitelistpath), <span class="dt">showWarnings=</span><span class="ot">FALSE</span>)
+
+<span class="co"># sitelist output label</span>
+sitelistname &lt;-<span class="st"> &quot;v3i_all&quot;</span>
+
+<span class="co"># debug/log file</span>
+debugpath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_debug/&quot;</span>
+<span class="co"># if debug folder does not exist, create it</span>
+<span class="kw">dir.create</span>(<span class="kw">file.path</span>(debugpath), <span class="dt">showWarnings=</span><span class="ot">FALSE</span>)
+debugname &lt;-<span class="st"> &quot;mdb-to-csv_debug.txt&quot;</span>
+<span class="co"># open the debug/log file</span>
+debugfile &lt;-<span class="st"> </span><span class="kw">file</span>(<span class="kw">paste</span>(debugpath, debugname, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>), <span class="st">&quot;w&quot;</span>)
+
+<span class="co"># setup</span>
+maxsites &lt;-<span class="st"> </span><span class="dv">2000</span>
+maxsamples &lt;-<span class="st"> </span><span class="dv">9000</span>
+miss &lt;-<span class="st"> </span><span class="op">-</span><span class="fl">9999.0</span>
+
+<span class="co"># load RODBC library and connect to the database</span>
+<span class="kw">library</span>(RODBC)
+gcdv3.db &lt;-<span class="st"> </span><span class="kw">odbcConnect</span>(dbname)
+<span class="kw">odbcGetInfo</span>(gcdv3.db)
+
+<span class="co"># check for existence of database site and data views</span>
+<span class="kw">sqlTables</span>(gcdv3.db, <span class="dt">tableName=</span><span class="st">&quot;ALL_BART_SITES&quot;</span>, <span class="dt">tableType=</span><span class="st">&quot;VIEW&quot;</span>)
+<span class="kw">sqlColumns</span>(gcdv3.db, <span class="st">&quot;ALL_BART_SITES&quot;</span>)<span class="op">$</span>COLUMN_NAME
+<span class="kw">sqlTables</span>(gcdv3.db, <span class="dt">tableName=</span><span class="st">&quot;ALL_BART_DATA&quot;</span>, <span class="dt">tableType=</span><span class="st">&quot;VIEW&quot;</span>)
+<span class="kw">sqlColumns</span>(gcdv3.db, <span class="st">&quot;ALL_BART_DATA&quot;</span>)<span class="op">$</span>COLUMN_NAME
+
+<span class="co"># site query</span>
+site_query &lt;-<span class="st"> </span><span class="kw">sqlFetch</span>(gcdv3.db, <span class="st">&quot;ALL_BART_SITES&quot;</span>)
+<span class="kw">names</span>(site_query)[<span class="dv">3</span>] &lt;-<span class="st"> &quot;LATITUDE&quot;</span>; <span class="kw">names</span>(site_query)[<span class="dv">4</span>] &lt;-<span class="st"> &quot;LONGITUDE&quot;</span>
+site_query<span class="op">$</span>SITE_NAME &lt;-<span class="st"> </span><span class="kw">as.character</span>(site_query<span class="op">$</span>SITE_NAME)
+<span class="kw">head</span>(site_query)
+<span class="kw">str</span>(site_query)
+
+<span class="co"># data query</span>
+data_query &lt;-<span class="st"> </span><span class="kw">sqlFetch</span>(gcdv3.db, <span class="st">&quot;ALL_BART_DATA&quot;</span>)
+<span class="kw">names</span>(data_query)[<span class="dv">4</span>] &lt;-<span class="st"> &quot;DEPTH&quot;</span>
+<span class="kw">head</span>(data_query)
+<span class="kw">str</span>(data_query)
+
+<span class="co"># close the database</span>
+<span class="kw">odbcClose</span>(gcdv3.db)
+
+<span class="co"># site .csv file</span>
+sitecsvpath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_query/&quot;</span>
+<span class="kw">write.csv</span>(site_query, <span class="kw">paste</span>(sitecsvpath, querysitename, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>), <span class="dt">row.names=</span><span class="ot">FALSE</span>)
+
+<span class="co"># data .csv file</span>
+datacsvpath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_query/&quot;</span>
+<span class="kw">write.csv</span>(data_query, <span class="kw">paste</span>(datacsvpath, querydataname, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>), <span class="dt">row.names=</span><span class="ot">FALSE</span>)
+
+<span class="co"># rewrite sitefile as .csv file for sorting by region and depositional context</span>
+sitelist &lt;-<span class="st"> </span><span class="kw">data.frame</span>(site_query<span class="op">$</span>ID_SITE, site_query<span class="op">$</span>LATITUDE, site_query<span class="op">$</span>LONGITUDE, site_query<span class="op">$</span>ELEV, 
+  site_query<span class="op">$</span>ID_DEPO_CONTEXT, site_query<span class="op">$</span>SITE_NAME, <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)
+<span class="kw">names</span>(sitelist) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Site_ID&quot;</span>, <span class="st">&quot;Lat&quot;</span>, <span class="st">&quot;Lon&quot;</span>, <span class="st">&quot;Elev&quot;</span>, <span class="st">&quot;depo_context&quot;</span>, <span class="st">&quot;Site_Name&quot;</span>)
+<span class="kw">head</span>(sitelist)
+<span class="kw">str</span>(sitelist)
+sitelistfile &lt;-<span class="st"> </span><span class="kw">paste</span>(sitelistpath, sitelistname, <span class="st">&quot;.csv&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+<span class="kw">write.table</span>(sitelist, sitelistfile, <span class="dt">row.names=</span><span class="ot">FALSE</span>, <span class="dt">sep=</span><span class="st">&quot;,&quot;</span>)
+
+<span class="co"># loop over sites</span>
+<span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>maxsites) {
+
+  nsamp &lt;-<span class="st"> </span><span class="dv">0</span>
+  sitedata &lt;-<span class="st"> </span>data_query[data_query<span class="op">$</span>ID_SITE <span class="op">==</span><span class="st"> </span>j, ]
+  nsamp &lt;-<span class="st"> </span><span class="kw">length</span>(sitedata<span class="op">$</span>ID_SITE)
+
+    <span class="kw">head</span>(sitedata)
+    <span class="kw">tail</span>(sitedata)
+
+    <span class="co"># local variables</span>
+  <span class="cf">if</span> (nsamp <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>) {
+    jchar &lt;-<span class="st"> </span><span class="kw">as.character</span>(j)
+    nsampchar &lt;-<span class="st"> </span><span class="kw">as.character</span>(nsamp)
+    <span class="kw">writeLines</span>(<span class="kw">paste</span>(<span class="st">&quot;Site&quot;</span>,jchar,nsampchar,<span class="st">&quot;samples&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>), <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+  
+    <span class="co"># local variables</span>
+    depth &lt;-<span class="st"> </span>sitedata<span class="op">$</span>DEPTH; age &lt;-<span class="st"> </span>sitedata<span class="op">$</span>EST_AGE; quant &lt;-<span class="st"> </span>sitedata<span class="op">$</span>QUANTITY
+    depth[<span class="kw">is.na</span>(depth)] &lt;-<span class="st"> </span>miss
+    age[<span class="kw">is.na</span>(age)] &lt;-<span class="st"> </span>miss
+    quant[<span class="kw">is.na</span>(quant)] &lt;-<span class="st"> </span>miss
+    
+    thickness &lt;-<span class="st"> </span><span class="kw">rep</span>(miss, nsamp); dep_time &lt;-<span class="st"> </span><span class="kw">rep</span>(miss, nsamp); sed_rate &lt;-<span class="st"> </span><span class="kw">rep</span>(miss, nsamp)
+    unit_dep_time &lt;-<span class="st"> </span><span class="kw">rep</span>(miss, nsamp)
+    xst_level &lt;-<span class="st"> </span><span class="kw">as.character</span>(sitedata[<span class="dv">1</span>,<span class="dv">9</span>])
+
+    <span class="co"># sed rate and deposition time</span>
+    <span class="co"># first (top) sample</span>
+    <span class="cf">if</span> (depth[<span class="dv">1</span>] <span class="op">!=</span><span class="st"> </span>miss <span class="op">&amp;&amp;</span><span class="st"> </span>depth[<span class="dv">2</span>] <span class="op">!=</span><span class="st"> </span>miss) {
+      thickness[<span class="dv">1</span>] &lt;-<span class="st"> </span>(depth[<span class="dv">2</span>] <span class="op">-</span><span class="st"> </span>depth[<span class="dv">1</span>])<span class="op">*</span><span class="fl">100.0</span> <span class="co"># meters to cm (depth in m, influx and conc in cm)</span>
+      dep_time[<span class="dv">1</span>] &lt;-<span class="st"> </span>age[<span class="dv">2</span>] <span class="op">-</span><span class="st"> </span>age[<span class="dv">1</span>]
+      <span class="cf">if</span> (dep_time[<span class="dv">1</span>] <span class="op">&gt;</span><span class="st"> </span><span class="fl">0.0</span>) sed_rate[<span class="dv">1</span>] &lt;-<span class="st"> </span>thickness[<span class="dv">1</span>]<span class="op">/</span>dep_time[<span class="dv">1</span>]
+      <span class="cf">if</span> (sed_rate[<span class="dv">1</span>] <span class="op">!=</span><span class="st"> </span>miss) unit_dep_time[<span class="dv">1</span>] &lt;-<span class="st"> </span><span class="fl">1.0</span><span class="op">/</span>sed_rate[<span class="dv">1</span>]
+    }
+
+    <span class="co"># samples 2 to nsamp-1</span>
+    <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">2</span><span class="op">:</span>(nsamp<span class="op">-</span><span class="dv">1</span>)) {
+      <span class="cf">if</span> (depth[<span class="dv">1</span>] <span class="op">!=</span><span class="st"> </span>miss <span class="op">&amp;&amp;</span><span class="st"> </span>depth[<span class="dv">2</span>] <span class="op">!=</span><span class="st"> </span>miss) {
+        thickness[i] &lt;-<span class="st"> </span>(depth[i<span class="op">+</span><span class="dv">1</span>] <span class="op">-</span><span class="st"> </span>depth[i])<span class="op">*</span><span class="fl">100.0</span> 
+        dep_time[i] &lt;-<span class="st"> </span>((age[i<span class="op">+</span><span class="dv">1</span>] <span class="op">+</span><span class="st"> </span>age[i])<span class="op">/</span><span class="fl">2.0</span>) <span class="op">-</span><span class="st"> </span>((age[i] <span class="op">+</span><span class="st"> </span>age[i<span class="op">-</span><span class="dv">1</span>])<span class="op">/</span><span class="fl">2.0</span>)
+        <span class="cf">if</span> (dep_time[i] <span class="op">&gt;</span><span class="st"> </span><span class="fl">0.0</span>) sed_rate[i] &lt;-<span class="st"> </span>thickness[i]<span class="op">/</span>dep_time[i]
+        <span class="cf">if</span> (sed_rate[i] <span class="op">!=</span><span class="st"> </span>miss) unit_dep_time[i] &lt;-<span class="st"> </span><span class="fl">1.0</span><span class="op">/</span>sed_rate[i] 
+      }
+    }
+    <span class="co"># last (bottom) sample</span>
+    <span class="cf">if</span> (depth[nsamp<span class="op">-</span><span class="dv">1</span>] <span class="op">!=</span><span class="st"> </span>miss  <span class="op">&amp;&amp;</span><span class="st"> </span>depth[nsamp] <span class="op">!=</span><span class="st"> </span>miss) {
+      thickness[nsamp] &lt;-<span class="st"> </span>thickness[nsamp<span class="op">-</span><span class="dv">1</span>] <span class="co"># replicate thickness</span>
+      dep_time[nsamp] &lt;-<span class="st"> </span>age[nsamp] <span class="op">-</span><span class="st"> </span>age[nsamp<span class="op">-</span><span class="dv">1</span>]
+      sed_rate[nsamp] &lt;-<span class="st"> </span>sed_rate[nsamp<span class="op">-</span><span class="dv">1</span>] <span class="co"># replicate sed_rate</span>
+      unit_dep_time[nsamp] &lt;-<span class="st"> </span>unit_dep_time[nsamp<span class="op">-</span><span class="dv">1</span>]
+    }
+
+    <span class="co"># counts of missing values</span>
+    depth_count &lt;-<span class="st"> </span><span class="dv">0</span>; age_count &lt;-<span class="st"> </span><span class="dv">0</span>; quant_count &lt;-<span class="st"> </span><span class="dv">0</span>; sed_rate_count &lt;-<span class="st"> </span><span class="dv">0</span>; sed_rate_flag &lt;-<span class="st"> </span><span class="dv">1</span>
+    depth_count &lt;-<span class="st"> </span><span class="kw">sum</span>(depth <span class="op">!=</span><span class="st"> </span>miss)
+    age_count &lt;-<span class="st"> </span><span class="kw">sum</span>(age <span class="op">!=</span><span class="st"> </span>miss)
+    quant_count &lt;-<span class="st"> </span><span class="kw">sum</span>(quant <span class="op">!=</span><span class="st"> </span>miss)
+    sed_rate_count &lt;-<span class="st"> </span><span class="kw">sum</span>(sed_rate <span class="op">!=</span><span class="st"> </span>miss)
+    <span class="cf">if</span> (sed_rate_count <span class="op">!=</span><span class="st"> </span>nsamp) sed_rateflag =<span class="st"> </span><span class="dv">0</span>
+
+    <span class="co"># check for age or depth reversals, and zero or negative sed rates (in nonmissing data)</span>
+    depth_reversal &lt;-<span class="st"> </span><span class="dv">0</span>; age_reversal &lt;-<span class="st"> </span><span class="dv">0</span>; sed_rate_zeroneg &lt;-<span class="st"> </span><span class="dv">0</span>         
+    <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">2</span><span class="op">:</span>nsamp) {
+      <span class="cf">if</span> (age[i] <span class="op">!=</span><span class="st"> </span>miss <span class="op">&amp;&amp;</span><span class="st"> </span>age[i<span class="op">-</span><span class="dv">1</span>] <span class="op">!=</span><span class="st"> </span>miss <span class="op">&amp;&amp;</span><span class="st"> </span>age[i] <span class="op">&lt;=</span><span class="st"> </span>age[i<span class="op">-</span><span class="dv">1</span>]) age_reversal=<span class="dv">1</span>
+      <span class="cf">if</span> (depth[i] <span class="op">!=</span><span class="st"> </span>miss <span class="op">&amp;&amp;</span><span class="st"> </span>depth[i<span class="op">-</span><span class="dv">1</span>] <span class="op">!=</span><span class="st"> </span>miss) {
+        <span class="cf">if</span> (depth[i] <span class="op">&lt;=</span><span class="st"> </span>depth[i<span class="op">-</span><span class="dv">1</span>]) depth_reversal=<span class="dv">1</span>
+      } 
+    }
+    <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">2</span><span class="op">:</span>nsamp) {
+      <span class="cf">if</span> (sed_rate[i] <span class="op">!=</span><span class="st"> </span>miss <span class="op">&amp;&amp;</span><span class="st"> </span>sed_rate[i] <span class="op">&lt;=</span><span class="st"> </span><span class="fl">0.0</span>) sed_rate_zeroneg=<span class="dv">1</span>
+    }
+
+        <span class="co"># set and write out various flags</span>
+    <span class="cf">if</span> (depth_count <span class="op">!=</span><span class="st"> </span><span class="dv">0</span> <span class="op">&amp;&amp;</span><span class="st"> </span>depth_count <span class="op">!=</span><span class="st"> </span>nsamp) {
+      <span class="kw">writeLines</span>(<span class="kw">paste</span>(<span class="st">&quot;**** has a missing depth when some are nonmissing&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>), <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    }
+    <span class="cf">if</span> (age_count <span class="op">!=</span><span class="st"> </span><span class="dv">0</span> <span class="op">&amp;&amp;</span><span class="st"> </span>age_count <span class="op">!=</span><span class="st"> </span>nsamp) {
+      <span class="kw">writeLines</span>(<span class="kw">paste</span>(<span class="st">&quot;**** has a missing age when some are nonmissing&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>), <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    }
+    <span class="cf">if</span> (quant_count <span class="op">!=</span><span class="st"> </span><span class="dv">0</span> <span class="op">&amp;&amp;</span><span class="st"> </span>quant_count <span class="op">!=</span><span class="st"> </span>nsamp) {
+      <span class="kw">writeLines</span>(<span class="kw">paste</span>(<span class="st">&quot;**** has a missing quantity when some are nonmissing&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>), <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    }
+    <span class="cf">if</span> (sed_rate_count <span class="op">!=</span><span class="st"> </span><span class="dv">0</span> <span class="op">&amp;&amp;</span><span class="st"> </span>sed_rate_count <span class="op">!=</span><span class="st"> </span>nsamp) {
+      <span class="kw">writeLines</span>(<span class="kw">paste</span>(<span class="st">&quot;**** has a missing sed rate when some are nonmissing&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>), <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    }
+    <span class="cf">if</span> (depth_reversal <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>) {
+      <span class="kw">writeLines</span>(<span class="kw">paste</span>(<span class="st">&quot;**** has a depth reversal&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>), <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    }
+    <span class="cf">if</span> (age_reversal <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>) {
+      <span class="kw">writeLines</span>(<span class="kw">paste</span>(<span class="st">&quot;**** has an age reversal&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>), <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    }
+    <span class="cf">if</span> (sed_rate_zeroneg <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>) {
+      <span class="kw">writeLines</span>(<span class="kw">paste</span>(<span class="st">&quot;**** has zero or negative sed rates&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>), <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    }
+
+    <span class="co"># alternative quantities</span>
+    
+    conc &lt;-<span class="st"> </span><span class="kw">rep</span>(miss, nsamp); influx &lt;-<span class="st"> </span><span class="kw">rep</span>(miss, nsamp)
+    influx_source &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="st">&quot;none&quot;</span>, nsamp) ; conc_source &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="st">&quot;none&quot;</span>, nsamp)
+    
+    <span class="co"># select case based on xst_level</span>
+    
+    <span class="cf">if</span> (xst_level <span class="op">==</span><span class="st"> &quot;INFL&quot;</span>)          <span class="co"># adopt influx values as they are, calculate concentration</span>
+    {  
+      influx &lt;-<span class="st"> </span>quant
+      influx_source &lt;-<span class="st"> &quot;data&quot;</span>
+      <span class="cf">if</span> (influx <span class="op">!=</span><span class="st"> </span>miss <span class="op">&amp;&amp;</span><span class="st"> </span>unit_dep_time <span class="op">!=</span><span class="st"> </span>miss <span class="op">&amp;&amp;</span><span class="st"> </span>sed_rate <span class="op">!=</span><span class="st"> </span><span class="fl">0.0</span>) {
+        conc &lt;-<span class="st"> </span>influx <span class="op">*</span><span class="st"> </span>unit_dep_time
+        conc_source &lt;-<span class="st"> &quot;calculated from influx &quot;</span>
+      } <span class="cf">else</span> {
+        conc &lt;-<span class="st"> </span>quant
+        conc_source &lt;-<span class="st"> &quot;copied from quant &quot;</span>
+      }
+      <span class="kw">writeLines</span>(<span class="st">&quot;INFL&quot;</span>, <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    } 
+    
+    <span class="cf">else</span> <span class="cf">if</span> (xst_level <span class="op">==</span><span class="st"> &quot;CONC&quot;</span>)     <span class="co"># calculate influx, adopt conc values as they are</span>
+    {
+      conc &lt;-<span class="st"> </span>quant
+      conc_source &lt;-<span class="st"> &quot;data&quot;</span>
+      <span class="cf">if</span> (conc <span class="op">!=</span><span class="st"> </span>miss <span class="op">&amp;&amp;</span><span class="st"> </span>sed_rate <span class="op">!=</span><span class="st"> </span>miss <span class="op">&amp;&amp;</span><span class="st"> </span>sed_rate <span class="op">!=</span><span class="st"> </span><span class="fl">0.0</span>) {
+        influx &lt;-<span class="st"> </span>quant <span class="op">*</span><span class="st"> </span>sed_rate
+        influx_source &lt;-<span class="st"> &quot;calculated from conc &quot;</span>
+      } <span class="cf">else</span> {
+        influx &lt;-<span class="st"> </span>quant
+        influx_source &lt;-<span class="st"> &quot;copied from quant &quot;</span>
+      }  
+      <span class="kw">writeLines</span>(<span class="st">&quot;CONC&quot;</span>, <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    } 
+    
+    <span class="cf">else</span> <span class="cf">if</span> (xst_level <span class="op">==</span><span class="st"> &quot;C0P0&quot;</span>)     <span class="co"># assume quantity is concentration like</span>
+    {
+      conc &lt;-<span class="st"> </span>quant
+      conc_source &lt;-<span class="st"> &quot;C0P0&quot;</span>
+      <span class="cf">if</span> (sed_rate <span class="op">!=</span><span class="st"> </span>miss <span class="op">&amp;&amp;</span><span class="st"> </span>sed_rate <span class="op">!=</span><span class="st"> </span><span class="fl">0.0</span>) {
+        influx &lt;-<span class="st"> </span>quant <span class="op">*</span><span class="st"> </span>sed_rate
+        influx_source &lt;-<span class="st"> &quot;calculated from C0P0 (conc) &quot;</span>
+      } <span class="cf">else</span> {
+        influx &lt;-<span class="st"> </span>quant
+        influx_source &lt;-<span class="st"> &quot;copied from quant &quot;</span>
+      }    
+      <span class="kw">writeLines</span>(<span class="st">&quot;C0P0&quot;</span>, <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    } 
+    
+    <span class="cf">else</span> <span class="cf">if</span> (xst_level <span class="op">==</span><span class="st"> &quot;SOIL&quot;</span>)     <span class="co"># just copy</span>
+    {
+      conc &lt;-<span class="st"> </span>quant
+      conc_source &lt;-<span class="st"> &quot;copied from quant &quot;</span>
+      influx &lt;-<span class="st"> </span>quant
+      influx_source &lt;-<span class="st"> &quot;copied from quant &quot;</span>
+      <span class="kw">writeLines</span>(<span class="st">&quot;SOIL&quot;</span>, <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    } 
+    
+    <span class="cf">else</span> <span class="cf">if</span> (xst_level <span class="op">==</span><span class="st"> &quot;OTHE&quot;</span>)     <span class="co"># just copy</span>
+    {
+      conc &lt;-<span class="st"> </span>quant
+      conc_source &lt;-<span class="st"> &quot;copied from quant &quot;</span>
+      influx &lt;-<span class="st"> </span>quant
+      influx_source &lt;-<span class="st"> &quot;copied from quant &quot;</span>
+      <span class="kw">writeLines</span>(<span class="st">&quot;OTHE&quot;</span>, <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    } 
+    
+    <span class="cf">else</span> 
+    {
+      conc &lt;-<span class="st"> </span>quant
+      conc_source &lt;-<span class="st"> &quot;copied from quant &quot;</span>
+      influx &lt;-<span class="st"> </span>quant
+      influx_source &lt;-<span class="st"> &quot;copied from quant &quot;</span>
+      <span class="kw">writeLines</span>(<span class="st">&quot;Unknown&quot;</span>, <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+    }
+  }
+
+  <span class="co"># check for influx == 0.0 everywhere</span>
+  nzero &lt;-<span class="st"> </span><span class="dv">0</span>
+  nzero &lt;-<span class="st"> </span><span class="kw">sum</span>(influx <span class="op">!=</span><span class="st"> </span><span class="fl">0.0</span>)
+  <span class="cf">if</span> (nzero <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) {
+    <span class="kw">writeLines</span>(<span class="kw">paste</span>(<span class="st">&quot;**** has no non-zero influx values&quot;</span>, <span class="dt">sep=</span><span class="st">&quot; &quot;</span>), <span class="dt">con =</span> debugfile, <span class="dt">sep =</span> <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>)
+  }
+
+  <span class="co"># .csv out</span>
+  <span class="cf">if</span> (nsamp <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span> <span class="op">&amp;&amp;</span><span class="st"> </span>nzero <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>) {
+
+    <span class="co"># get siteid string</span>
+    siteidchar &lt;-<span class="st"> </span><span class="kw">as.character</span>(j)
+    <span class="cf">if</span> (j <span class="op">&gt;=</span><span class="st"> </span><span class="dv">1</span>) siteid &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;000&quot;</span>, siteidchar, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+    <span class="cf">if</span> (j <span class="op">&gt;=</span><span class="st"> </span><span class="dv">10</span>) siteid &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;00&quot;</span>, siteidchar, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+    <span class="cf">if</span> (j <span class="op">&gt;=</span><span class="st"> </span><span class="dv">100</span>) siteid &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;0&quot;</span>, siteidchar, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+    <span class="cf">if</span> (j <span class="op">&gt;=</span><span class="st"> </span><span class="dv">1000</span>) siteid &lt;-<span class="st"> </span><span class="kw">paste</span>(    siteidchar, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+    sitehdr &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;site&quot;</span>, siteid, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+    
+    <span class="co"># assemble output data and write it out</span>
+    samplenum &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">1</span><span class="op">:</span>nsamp)
+    outdata &lt;-<span class="st"> </span><span class="kw">data.frame</span>(samplenum,sitedata<span class="op">$</span>ID_SAMPLE, depth, age, sed_rate, quant, conc, 
+      influx, xst_level, conc_source, influx_source)
+    <span class="kw">names</span>(outdata) &lt;-<span class="st"> </span><span class="kw">c</span>(sitehdr, <span class="st">&quot;id_sample&quot;</span>, <span class="st">&quot;depth&quot;</span>, <span class="st">&quot;est_age&quot;</span>, <span class="st">&quot;sed_rate&quot;</span>, <span class="st">&quot;quant&quot;</span>, <span class="st">&quot;conc&quot;</span>,
+      <span class="st">&quot;influx&quot;</span>, <span class="st">&quot;xst_level&quot;</span>, <span class="st">&quot;conc_source&quot;</span>, <span class="st">&quot;influx_source&quot;</span> )
+    csvfile &lt;-<span class="st"> </span><span class="kw">paste</span>(csvpath,siteid,<span class="st">&quot;_data.csv&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+    <span class="kw">write.csv</span>(outdata, csvfile, <span class="dt">row.names=</span><span class="ot">FALSE</span>)
+  }
+}
+
+<span class="kw">close</span>(debugfile)</code></pre></div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
