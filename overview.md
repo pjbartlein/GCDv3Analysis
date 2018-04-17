@@ -1,6 +1,6 @@
 # Introduction #
 
-This is a set of web pages that describe the development of a composite curve of charcoal data drawn from the Global Charcoal Database v. 3, using a set of R scripts.  The intention here is to explicitly document the analysis steps that were developed originally as a set of Fortran programs, and which are now implemented in the R `paleofire` package. 
+This is a set of web pages that describe the development of a composite curve of charcoal data drawn from the Global Charcoal Database version 3, (GCDv3) using a set of R scripts.  The intention here is to explicitly document the analysis steps that were developed originally as a set of Fortran programs, and which are now implemented in the R `paleofire` package.  The R scripts described here can also be used as a point of departure for the development of new analysis approaches.
 
 The data source for these examples is a Microsoft Access (`.mdb`) database, downloaded from  [[http://www.gpwg.paleofire.org/]](http://www.gpwg.paleofire.org/), e.g., `GCDv03_Marlon_et_al_2015.mdb`.  In the example here, the scripts aim to reproduce the "Globe" curve in Fig. 6 of Marlon et al. (2016).
 
