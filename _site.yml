@@ -3,7 +3,7 @@ navbar:
   title: GCDv3 Analysis
   left:
   - text: Overview
-    href: Overview.html
+    href: overview.html
   - text: Analyses
     menu:
     - text: Standard analysis
