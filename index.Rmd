@@ -14,7 +14,7 @@ output:
 
 # R scripts for fitting composite curves of charcoal data #
 
-The intention of these pages is to describe and document the analysis steps that were developed as a set of Fortran programs, and are now implemented in the R `paleofire` package.  The scripts can also provide a "point-of-departure" for the development and testing of additional analysis procedures that are not currently implemented in the `paleofire` package.
+The intention of these pages is to describe and document the analysis steps that were developed as a set of Fortran programs, and are now implemented in the R `paleofire` package, with a focus on GCDv3 (Marlon et al., 2016).  The scripts also provide a "point-of-departure" for the development and testing of additional analysis procedures that are not currently implemented in the `paleofire` package.
 
 Contents:
 
@@ -30,3 +30,5 @@ Links and other information sources:
 - Blarquez O., Vanni&egrave;re, B., Marlon J. R., Daniau A.-L., Power M. J., Brewer S., Bartlein P. J., (2014). paleofire: an R package to analyse sedimentary charcoal records from the Global Charcoal Database to reconstruct past biomass burning. *Computers & Geosciences* 72:255-261. [[doi:10.1016/j.cageo.2014.07.020]](http://dx.doi.org/10.1016/j.cageo.2014.07.020)
 - Daniau, A.-L. et al. (2012).  Predictability of biomass burning.  *Global Biogeochemical Cycles* 26:GB4007. [[doi:10.1029/2011GB004249]](http://dx.doi.org/10.1029/2011GB004249)
 - Power, M.J., Marlon, J.R., Bartlein, P.J., Harrison, S.P., 2010. Fire history and the Global Charcoal Database: A new tool for hypothesis testing and data exploration. *Palaeogeography Palaeoclimatology Palaeoecology 291:52-59.* [[doi:10.1016/j.palaeo.2009.09.014]](http://dx.doi.org/10.1016/j.palaeo.2009.09.014)
+
+The GitHub repository for these webpages is at [https://github.com/pjbartlein/GCDv3Analysis/](https://github.com/pjbartlein/GCDv3Analysis/)
