@@ -1,4 +1,4 @@
-# GCDv3AnalysisR
+# GCDv3Analysis
 RMarkdown files for creating the GCDv3 Analysis web page at:  
 [[https://pjbartlein.github.io/GCDv3Analysis/]](https://pjbartlein.github.io/GCDv3Analysis/)
 
