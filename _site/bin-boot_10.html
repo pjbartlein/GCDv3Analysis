@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+
+<title>Composite curves and bootstrap C.I.’s via binning   (bin-boot.R)</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/united.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #0000ff; } /* Keyword */
+code > span.ch { color: #008080; } /* Char */
+code > span.st { color: #008080; } /* String */
+code > span.co { color: #008000; } /* Comment */
+code > span.ot { color: #ff4000; } /* Other */
+code > span.al { color: #ff0000; } /* Alert */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #008000; font-weight: bold; } /* Warning */
+code > span.cn { } /* Constant */
+code > span.sc { color: #008080; } /* SpecialChar */
+code > span.vs { color: #008080; } /* VerbatimString */
+code > span.ss { color: #008080; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { } /* Variable */
+code > span.cf { color: #0000ff; } /* ControlFlow */
+code > span.op { } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #ff4000; } /* Preprocessor */
+code > span.do { color: #008000; } /* Documentation */
+code > span.an { color: #008000; } /* Annotation */
+code > span.cv { color: #008000; } /* CommentVar */
+code > span.at { } /* Attribute */
+code > span.in { color: #008000; } /* Information */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="SI-md-08.css" type="text/css" />
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">GCD Analysis</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="Overview.html">Overview</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Analyses
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li class="dropdown-header">Standard analysis</li>
+    <li>
+      <a href="mdb-to-csv_07.html">Query and site .csv files from an Access database (mdb-to-csv.R)</a>
+    </li>
+    <li>
+      <a href="trans-and-zscore_07.html">Box-Cox transformation and Z-Score rescaling (trans-and-zscore.R)</a>
+    </li>
+    <li>
+      <a href="presample-bin_07.html">Presampling or binning of transformed data (presample-bin.R)</a>
+    </li>
+    <li>
+      <a href="smooth-curve_07.html">Composite curves and bootstrap C.I.'s using locfit() (smooth-curve.R)</a>
+    </li>
+    <li class="dropdown-header">Alternative approaches</li>
+    <li>
+      <a href="trans-and-norman_10.html">Box-Cox transformation and normalized anomaly rescaling (trans-and-norman.R)</a>
+    </li>
+    <li>
+      <a href="bin-boot_10.html">Composite curves and bootstrap C.I.'s via binning</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Code
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li class="dropdown-header">Standard analysis</li>
+    <li>
+      <a href="mdb-to-csv_07_code.html">mdb-to-csv_code.R</a>
+    </li>
+    <li>
+      <a href="trans-and-zscore_07_code.html">trans-and-zscore.R</a>
+    </li>
+    <li>
+      <a href="presample-bin_07_code.html">presample-bin.R</a>
+    </li>
+    <li>
+      <a href="smooth-curve_07_code.html">smooth-curve.R</a>
+    </li>
+    <li class="dropdown-header">Alternative approaches</li>
+    <li>
+      <a href="mdb-to-csv_07_code_osx.html">mdb-to-csv_code_osx.R</a>
+    </li>
+    <li>
+      <a href="trans-and-norman_10_code.html">trans-and-norman.R</a>
+    </li>
+    <li>
+      <a href="bin-boot_10_code.html">bin-boot.R</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Composite curves and bootstrap C.I.’s via binning <br> (bin-boot.R)</h1>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#introduction"><span class="toc-section-number">1</span> Introduction</a></li>
+<li><a href="#set-up"><span class="toc-section-number">2</span> Set up</a></li>
+<li><a href="#calculation-preliminaries"><span class="toc-section-number">3</span> Calculation preliminaries</a><ul>
+<li><a href="#initial-steps"><span class="toc-section-number">3.1</span> Initial steps</a></li>
+<li><a href="#read-data"><span class="toc-section-number">3.2</span> Read data</a></li>
+<li><a href="#find-number-of-sites-and-samples-contributing-to-fitted-values"><span class="toc-section-number">3.3</span> Find number of sites and samples contributing to fitted values</a></li>
+</ul></li>
+<li><a href="#curve-fitting-and-bootstrapping"><span class="toc-section-number">4</span> Curve-fitting and bootstrapping</a><ul>
+<li><a href="#composite-curve"><span class="toc-section-number">4.1</span> Composite curve</a></li>
+<li><a href="#bootstrap-by-site-confidence-intervals"><span class="toc-section-number">4.2</span> Bootstrap-by-site confidence intervals</a></li>
+<li><a href="#output"><span class="toc-section-number">4.3</span> Output</a></li>
+</ul></li>
+</ul>
+</div>
+
+<div id="introduction" class="section level1">
+<h1><span class="header-section-number">1</span> Introduction</h1>
+<p>This script (<code>binboot-curve.R</code>) fits step-like composite curves, with bootstrapping by site confidence intervals, via binning. As is the case with other analysis scripts, the script has two parts, a set-up portion that changes from analysis to analysis, and a computation part that does not change. This version reads “presampled” data.</p>
+</div>
+<div id="set-up" class="section level1">
+<h1><span class="header-section-number">2</span> Set up</h1>
+<p>The variables <code>queryname</code>, <code>basename</code> and <code>binname</code> are used to compose the path and filenames for the presampled data.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># age-bin averages of influx data</span>
+<span class="co"># bootstrap-by-site confidence intervals</span>
+
+<span class="co"># names</span>
+queryname &lt;-<span class="st"> &quot;v3i&quot;</span> <span class="co"># </span>
+basename &lt;-<span class="st"> &quot;nt2kb&quot;</span> 
+
+<span class="co"># paths for input and output .csv files -- modify as appropriate</span>
+datapath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/&quot;</span>
+sitelistpath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_sitelists/&quot;</span>
+sitelist &lt;-<span class="st"> &quot;v3i_nsa_globe&quot;</span>
+outpath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_curves/&quot;</span>
+
+<span class="co"># prebinning bin width</span>
+pbw &lt;-<span class="st"> </span><span class="dv">10</span>
+
+pbw_char &lt;-<span class="st"> </span><span class="kw">as.character</span>(pbw)
+<span class="cf">if</span> (pbw <span class="op">&lt;</span><span class="st"> </span><span class="dv">10</span>) pbw_char &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;0&quot;</span>, pbw_char, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)</code></pre></div>
+<p>Set the number of bootstrap samples or replications:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># number of bootstrap samples/replications</span>
+nreps &lt;-<span class="st"> </span><span class="dv">200</span></code></pre></div>
+<p>Specifiy the age-bin centers, and spacing. This version uses 20-year wide bins, with the first bin centered at -60 yr BP, or 2010 CE, and the last at 1950 yr BP, or 1 CE.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># age bin centers</span>
+abw &lt;-<span class="st"> </span><span class="dv">20</span> 
+abinbeg &lt;-<span class="st"> </span><span class="op">-</span><span class="dv">60</span> 
+abinend &lt;-<span class="st"> </span><span class="dv">1950</span></code></pre></div>
+<p>Set array sizes for saving bootstrap results.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># array sizes</span>
+maxrecs &lt;-<span class="st"> </span><span class="dv">2000</span>
+maxreps &lt;-<span class="st"> </span><span class="dv">1000</span>
+
+<span class="co"># plotting set up</span>
+xmin &lt;-<span class="st"> </span><span class="dv">0</span>; xmax &lt;-<span class="st"> </span><span class="dv">2020</span>; ymin1 &lt;-<span class="st"> </span><span class="op">-</span><span class="fl">1.0</span>; ymax1 &lt;-<span class="st"> </span><span class="fl">1.0</span>; ymin2 &lt;-<span class="st"> </span><span class="op">-</span><span class="fl">0.5</span>; ymax2 &lt;-<span class="st"> </span><span class="fl">1.0</span>
+xlim=<span class="kw">c</span>(xmin,xmax); ylim1=<span class="kw">c</span>(ymin1,ymax1); ylim2 &lt;-<span class="st"> </span><span class="kw">c</span>(ymin2,ymax2)
+xlab=<span class="st">&quot;Year CE&quot;</span>; xminortick &lt;-<span class="st"> </span><span class="dv">50</span>
+ylab=<span class="st">&quot;Normalized Anomalies of Transformed Influx&quot;</span>
+
+<span class="co"># plot output </span>
+plotout &lt;-<span class="st"> &quot;screen&quot;</span> <span class="co"># &quot;pdf&quot; # &quot;png&quot; # </span></code></pre></div>
+</div>
+<div id="calculation-preliminaries" class="section level1">
+<h1><span class="header-section-number">3</span> Calculation preliminaries</h1>
+<div id="initial-steps" class="section level2">
+<h2><span class="header-section-number">3.1</span> Initial steps</h2>
+<p>Set various output paths and filenames.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># no changes below here</span>
+
+<span class="co"># prebinning file name</span>
+binname &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;bw&quot;</span>, pbw_char, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+
+<span class="co"># presampled/binned files</span>
+csvpath &lt;-<span class="st"> &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_presamp_csv/&quot;</span>
+csvname &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;_presamp_influx_&quot;</span>,basename,<span class="st">&quot;_&quot;</span>,binname,<span class="st">&quot;.csv&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+
+<span class="co"># site list file</span>
+sitelistfile &lt;-<span class="st"> </span><span class="kw">paste</span>(sitelistpath, sitelist, <span class="st">&quot;.csv&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+sitelistfile</code></pre></div>
+<pre><code>## [1] &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_sitelists/v3i_nsa_globe.csv&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># curve (output) path and file</span>
+curvecsvpath &lt;-<span class="st"> </span><span class="kw">paste</span>(datapath,queryname,<span class="st">&quot;_curves/&quot;</span>,<span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+
+<span class="co"># if output folder does not exist, create it</span>
+<span class="kw">dir.create</span>(<span class="kw">file.path</span>(datapath, <span class="kw">paste</span>(queryname,<span class="st">&quot;_curves/&quot;</span>,<span class="dt">sep=</span><span class="st">&quot;&quot;</span>)), <span class="dt">showWarnings=</span><span class="ot">FALSE</span>)
+curvename &lt;-<span class="st"> </span><span class="kw">paste</span>(sitelist,<span class="st">&quot;_binboot_&quot;</span>,basename,<span class="st">&quot;_&quot;</span>,binname,<span class="st">&quot;_abw&quot;</span>,<span class="kw">as.character</span>(abw),<span class="st">&quot;_&quot;</span>,
+  <span class="kw">as.character</span>(nreps), <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+curvefile &lt;-<span class="st"> </span><span class="kw">paste</span>(curvename, <span class="st">&quot;.csv&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+<span class="kw">print</span>(curvecsvpath)</code></pre></div>
+<pre><code>## [1] &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_curves/&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(curvename)</code></pre></div>
+<pre><code>## [1] &quot;v3i_nsa_globe_binboot_nt2kb_bw10_abw20_200&quot;</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(curvefile)</code></pre></div>
+<pre><code>## [1] &quot;v3i_nsa_globe_binboot_nt2kb_bw10_abw20_200.csv&quot;</code></pre>
+<p>Code block to implement writing .pdf to file:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># .pdf plot of bootstrap iterations</span>
+<span class="cf">if</span> (plotout <span class="op">==</span><span class="st"> &quot;pdf&quot;</span>) {
+pdffile &lt;-<span class="st"> </span><span class="kw">paste</span>(curvename, <span class="st">&quot;.pdf&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+<span class="kw">print</span>(pdffile)
+}
+<span class="co"># .png plot of bootstrap iterations</span>
+<span class="cf">if</span> (plotout <span class="op">==</span><span class="st"> &quot;png&quot;</span>) {
+  pngfile &lt;-<span class="st"> </span><span class="kw">paste</span>(curvename, <span class="st">&quot;.png&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+  <span class="kw">print</span>(pngfile)
+}</code></pre></div>
+<p>Read the list of sites to be processed. Note that this is the site list may contain sites that after transforming and presampling may have no useful data. Those sites are ignored when the data are read in.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># read the list of sites</span>
+sites &lt;-<span class="st"> </span><span class="kw">read.csv</span>(sitelistfile)
+<span class="kw">head</span>(sites)</code></pre></div>
+<pre><code>##   Site_ID     Lat       Lon Elev depo_context         Site_Name
+## 1       1 44.6628 -110.6161 2530         LASE            Cygnet
+## 2       2 44.9183 -110.3467 1884         LASE Slough Creek Pond
+## 3       3 45.7044 -114.9867 2250         LASE        Burnt Knob
+## 4       4 45.8919 -114.2619 2300         LASE             Baker
+## 5       5 46.3206 -114.6503 1770         LASE            Hoodoo
+## 6       6 45.8406 -113.4403 1921         LASE           Pintlar</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ns &lt;-<span class="st"> </span><span class="kw">length</span>(sites[,<span class="dv">1</span>]) <span class="co">#length(sites$ID_SITE)</span>
+ns</code></pre></div>
+<pre><code>## [1] 703</code></pre>
+<p>Define arrays for data, fitted values and statistics.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># arrays for data and fitted values</span>
+age &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="ot">NA</span>, <span class="dt">ncol=</span>ns, <span class="dt">nrow=</span>maxrecs)
+influx &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="ot">NA</span>, <span class="dt">ncol=</span>ns, <span class="dt">nrow=</span>maxrecs)
+nsamples &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, maxrecs)
+
+<span class="co"># age bin centers</span>
+abinage &lt;-<span class="st"> </span><span class="kw">seq</span>(abinbeg, abinend, <span class="dt">by=</span>abw)
+abinage</code></pre></div>
+<pre><code>##   [1]  -60  -40  -20    0   20   40   60   80  100  120  140  160  180  200  220  240  260  280  300  320
+##  [21]  340  360  380  400  420  440  460  480  500  520  540  560  580  600  620  640  660  680  700  720
+##  [41]  740  760  780  800  820  840  860  880  900  920  940  960  980 1000 1020 1040 1060 1080 1100 1120
+##  [61] 1140 1160 1180 1200 1220 1240 1260 1280 1300 1320 1340 1360 1380 1400 1420 1440 1460 1480 1500 1520
+##  [81] 1540 1560 1580 1600 1620 1640 1660 1680 1700 1720 1740 1760 1780 1800 1820 1840 1860 1880 1900 1920
+## [101] 1940</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">YearCE &lt;-<span class="st"> </span><span class="dv">1950</span> <span class="op">-</span><span class="st"> </span>abinage
+YearCE</code></pre></div>
+<pre><code>##   [1] 2010 1990 1970 1950 1930 1910 1890 1870 1850 1830 1810 1790 1770 1750 1730 1710 1690 1670 1650 1630
+##  [21] 1610 1590 1570 1550 1530 1510 1490 1470 1450 1430 1410 1390 1370 1350 1330 1310 1290 1270 1250 1230
+##  [41] 1210 1190 1170 1150 1130 1110 1090 1070 1050 1030 1010  990  970  950  930  910  890  870  850  830
+##  [61]  810  790  770  750  730  710  690  670  650  630  610  590  570  550  530  510  490  470  450  430
+##  [81]  410  390  370  350  330  310  290  270  250  230  210  190  170  150  130  110   90   70   50   30
+## [101]   10</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># generate YearCE with a 1/2 time-step (abw) offset so step-plot type &quot;s&quot; registers correctly</span>
+pltYearCE &lt;-<span class="st"> </span>YearCE  <span class="op">+</span><span class="st">  </span>(abw<span class="op">/</span><span class="dv">2</span>)
+pltYearCE</code></pre></div>
+<pre><code>##   [1] 2020 2000 1980 1960 1940 1920 1900 1880 1860 1840 1820 1800 1780 1760 1740 1720 1700 1680 1660 1640
+##  [21] 1620 1600 1580 1560 1540 1520 1500 1480 1460 1440 1420 1400 1380 1360 1340 1320 1300 1280 1260 1240
+##  [41] 1220 1200 1180 1160 1140 1120 1100 1080 1060 1040 1020 1000  980  960  940  920  900  880  860  840
+##  [61]  820  800  780  760  740  720  700  680  660  640  620  600  580  560  540  520  500  480  460  440
+##  [81]  420  400  380  360  340  320  300  280  260  240  220  200  180  160  140  120  100   80   60   40
+## [101]   20</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># array for bootstrap results</span>
+min_age &lt;-<span class="st"> </span>abinbeg<span class="op">-</span>(abw<span class="op">/</span><span class="dv">2</span>); max_age &lt;-<span class="st"> </span>abinend <span class="co">#+(abw/2)</span>
+nbins &lt;-<span class="st"> </span><span class="kw">length</span>(abinage)
+yfit &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="ot">NA</span>, <span class="dt">nrow=</span>nbins, <span class="dt">ncol=</span>maxreps)
+
+<span class="co"># arrays for sample number tracking</span>
+ndec &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">0</span>, <span class="dt">ncol=</span>nbins, <span class="dt">nrow=</span>ns)
+ndec_tot &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, nbins)
+<span class="co">#xspan &lt;- rep(0, ntarg)</span>
+ninwin &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">0</span>, <span class="dt">ncol=</span>nbins, <span class="dt">nrow=</span>ns)
+ninwin_tot &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, nbins)</code></pre></div>
+</div>
+<div id="read-data" class="section level2">
+<h2><span class="header-section-number">3.2</span> Read data</h2>
+<p>Read and store data. Note that sites without data, even if in the site list, are skipped using the <code>file.exists()</code> function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># read and store the presample (binned) files as matrices of ages and influx values</span>
+ii &lt;-<span class="st"> </span><span class="dv">0</span>
+<span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>ns) {
+  <span class="co">#i &lt;- 1</span>
+  sitenum &lt;-<span class="st"> </span>sites[i,<span class="dv">1</span>] <span class="co"># sites$ID_SITE[i]</span>
+  <span class="kw">print</span>(sitenum)
+  siteidchar &lt;-<span class="st"> </span><span class="kw">as.character</span>(sitenum)
+  <span class="cf">if</span> (sitenum <span class="op">&gt;=</span><span class="st"> </span><span class="dv">1</span>) siteid &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;000&quot;</span>, siteidchar, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+  <span class="cf">if</span> (sitenum <span class="op">&gt;=</span><span class="st"> </span><span class="dv">10</span>) siteid &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;00&quot;</span>, siteidchar, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+  <span class="cf">if</span> (sitenum <span class="op">&gt;=</span><span class="st"> </span><span class="dv">100</span>) siteid &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&quot;0&quot;</span>, siteidchar, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+  <span class="cf">if</span> (sitenum <span class="op">&gt;=</span><span class="st"> </span><span class="dv">1000</span>) siteid &lt;-<span class="st"> </span><span class="kw">paste</span>(    siteidchar, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+  
+  inputfile &lt;-<span class="st"> </span><span class="kw">paste</span>(csvpath, siteid, csvname, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+  <span class="kw">print</span>(inputfile)
+  
+  <span class="cf">if</span> (<span class="kw">file.exists</span>(inputfile)) {
+    indata &lt;-<span class="st"> </span><span class="kw">read.csv</span>(inputfile)
+    nsamp &lt;-<span class="st">  </span><span class="kw">length</span>(indata<span class="op">$</span>age) <span class="co"># </span>
+    <span class="cf">if</span> (nsamp <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>) {
+        ii &lt;-<span class="st"> </span>ii<span class="op">+</span><span class="dv">1</span>
+        age[<span class="dv">1</span><span class="op">:</span>nsamp,ii] &lt;-<span class="st"> </span>indata<span class="op">$</span>age <span class="co"># </span>
+        influx[<span class="dv">1</span><span class="op">:</span>nsamp,ii] &lt;-<span class="st"> </span>indata<span class="op">$</span>norman <span class="co"># indata$zt # </span>
+        nsamples[ii] &lt;-<span class="st"> </span>nsamp
+    }
+  }
+}
+nsites &lt;-<span class="st"> </span>ii</code></pre></div>
+<p>Number of sites with data.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># number of sites with data</span>
+nsites</code></pre></div>
+<pre><code>## [1] 633</code></pre>
+<p>As the presample files are read, individual files will be listed:</p>
+<pre><code>##  [1] 1 
+##  [1] &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_presamp_csv/0001_presamp_influx_nt2kb_bw10.csv&quot; 
+##  ...</code></pre>
+<p>Trim the input data to an appropriate range given the target ages, and censor (set to <code>NA</code>) any tranformed influx values greater than 10.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># trim samples to age range</span>
+influx[age <span class="op">&gt;=</span><span class="st"> </span>abinend<span class="op">+</span>abw<span class="op">/</span><span class="dv">2</span>] &lt;-<span class="st"> </span><span class="ot">NA</span>
+age[age <span class="op">&gt;=</span><span class="st"> </span>abinend<span class="op">+</span>abw<span class="op">/</span><span class="dv">2</span>] &lt;-<span class="st"> </span><span class="ot">NA</span>
+
+<span class="co"># censor abs(influx) values &gt; 10</span>
+influx[<span class="kw">abs</span>(influx) <span class="op">&gt;=</span><span class="st"> </span><span class="dv">10</span>] &lt;-<span class="st"> </span><span class="ot">NA</span>
+age[<span class="kw">abs</span>(influx) <span class="op">&gt;=</span><span class="st"> </span><span class="dv">10</span>] &lt;-<span class="st"> </span><span class="ot">NA</span></code></pre></div>
+</div>
+<div id="find-number-of-sites-and-samples-contributing-to-fitted-values" class="section level2">
+<h2><span class="header-section-number">3.3</span> Find number of sites and samples contributing to fitted values</h2>
+<p>The number of sites with samples (<code>ndec_tot</code>) and the number of samples (<code>ninwin_tot</code>) that contribute to each fitted value are calculated, along with the effective window width or “span”. This code is clunky, but parallels that in the Fortran versions.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># count number of sites that contributed to each fitted value</span>
+ptm &lt;-<span class="st"> </span><span class="kw">proc.time</span>()
+<span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>nbins) {
+  
+  <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>nsites) {
+    <span class="cf">for</span> (k <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>nsamples[j]) {
+      <span class="cf">if</span> (<span class="op">!</span><span class="kw">is.na</span>(age[k,j])) {
+        ii &lt;-<span class="st"> </span><span class="kw">as.integer</span>(<span class="kw">ceiling</span>((age[k,j]<span class="op">-</span>abinbeg<span class="op">-</span>(abw<span class="op">/</span><span class="fl">2.0</span>))<span class="op">/</span>abw))<span class="op">+</span><span class="dv">1</span>
+        <span class="co">#print (c(i,j,k,ii))</span>
+        <span class="cf">if</span> (ii <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span> <span class="op">&amp;&amp;</span><span class="st"> </span>ii <span class="op">&lt;=</span><span class="st"> </span>nbins) {ndec[j,ii] =<span class="st"> </span><span class="dv">1</span>}
+        <span class="cf">if</span> (age[k,j] <span class="op">&gt;=</span><span class="st"> </span>abinage[i]<span class="op">-</span>(abw<span class="op">/</span><span class="dv">2</span>) <span class="op">&amp;&amp;</span><span class="st"> </span>age[k,j] <span class="op">&lt;=</span><span class="st"> </span>abinage[i]<span class="op">+</span>(abw<span class="op">/</span><span class="dv">2</span>)) {ninwin[j,i] =<span class="st"> </span><span class="dv">1</span>}
+      }
+    }
+  }
+  ndec_tot[i] &lt;-<span class="st"> </span><span class="kw">sum</span>(ndec[,i])
+  ninwin_tot[i] &lt;-<span class="st"> </span><span class="kw">sum</span>(ninwin[,i])
+}
+<span class="kw">proc.time</span>() <span class="op">-</span><span class="st"> </span>ptm</code></pre></div>
+<pre><code>##    user  system elapsed 
+##     4.7     0.0     4.7</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(<span class="kw">cbind</span>(<span class="dv">1950</span> <span class="op">-</span><span class="st"> </span>abinage, pltYearCE, abinage,ndec_tot,ninwin_tot))</code></pre></div>
+<pre><code>##           pltYearCE abinage ndec_tot ninwin_tot
+## [1,] 2010      2020     -60      125        125
+## [2,] 1990      2000     -40      158        201
+## [3,] 1970      1980     -20      155        181
+## [4,] 1950      1960       0      255        279
+## [5,] 1930      1940      20      212        244
+## [6,] 1910      1920      40      230        256</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">tail</span>(<span class="kw">cbind</span>(<span class="dv">1950</span> <span class="op">-</span><span class="st"> </span>abinage, pltYearCE, abinage,ndec_tot,ninwin_tot))</code></pre></div>
+<pre><code>##            pltYearCE abinage ndec_tot ninwin_tot
+##  [96,] 110       120    1840      153        192
+##  [97,]  90       100    1860      153        197
+##  [98,]  70        80    1880      147        190
+##  [99,]  50        60    1900      152        187
+## [100,]  30        40    1920      147        188
+## [101,]  10        20    1940      158        198</code></pre>
+</div>
+</div>
+<div id="curve-fitting-and-bootstrapping" class="section level1">
+<h1><span class="header-section-number">4</span> Curve-fitting and bootstrapping</h1>
+<p>First, the overall composite curve, i.e. without bootstrapping, determined and saved for plotting over the individual bootstrap curves later (where “curves” here are stepped-line plots). Second, the <code>nreps</code> individual bootstrap samples are selected, and a composite curve fitted to each and saved.</p>
+<div id="composite-curve" class="section level2">
+<h2><span class="header-section-number">4.1</span> Composite curve</h2>
+<p>The steps in getting this curve include:</p>
+<ol style="list-style-type: decimal">
+<li>Reshaping the data matrices (<code>age</code> and <code>influx</code>) into vectors</li>
+<li>Binning the data and</li>
+<li>calculating average values of the data for each bin.</li>
+</ol>
+<p>The composite curve using all data is calculated as follows:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ptm &lt;-<span class="st"> </span><span class="kw">proc.time</span>()
+<span class="co"># 1. reshape matrices into vectors </span>
+x &lt;-<span class="st"> </span><span class="kw">as.vector</span>(age)
+y &lt;-<span class="st"> </span><span class="kw">as.vector</span>(influx)
+lfdata &lt;-<span class="st"> </span><span class="kw">data.frame</span>(x,y)
+lfdata &lt;-<span class="st"> </span><span class="kw">na.omit</span>(lfdata)
+lfdata &lt;-<span class="st"> </span>lfdata[lfdata<span class="op">$</span>x <span class="op">&gt;=</span><span class="st"> </span>min_age <span class="op">&amp;</span><span class="st"> </span>lfdata<span class="op">$</span>x <span class="op">&lt;</span><span class="st"> </span>max_age, ]
+x &lt;-<span class="st"> </span>lfdata<span class="op">$</span>x; y &lt;-<span class="st"> </span>lfdata<span class="op">$</span>y
+
+<span class="co"># average influx for each age bin</span>
+
+binnum &lt;-<span class="st"> </span><span class="kw">as.integer</span>(<span class="kw">ceiling</span>((x<span class="op">-</span>abinbeg<span class="op">-</span>(abw<span class="op">/</span><span class="fl">2.0</span>))<span class="op">/</span>abw))<span class="op">+</span><span class="dv">1</span>
+binave &lt;-<span class="st"> </span><span class="kw">tapply</span>(y, binnum, mean)
+binaveage &lt;-<span class="st"> </span><span class="kw">tapply</span>(x, binnum, mean)
+bin_fit_all &lt;-<span class="st"> </span>binave
+binsubs_all &lt;-<span class="st"> </span><span class="kw">as.integer</span>(<span class="kw">unlist</span>(<span class="kw">dimnames</span>(binave)))
+
+<span class="co"># print results for debugging</span>
+<span class="co">#binnum; length(binnum)</span>
+<span class="co">#binave; length(binave)</span>
+<span class="co">#binaveage; length(binaveage)</span>
+<span class="co">#bin_fit_all; length(bin_fit_all)</span>
+<span class="co">#abinage; length(abinage) </span>
+<span class="co">#pltYearCE; length(pltYearCE) </span>
+
+<span class="kw">head</span>(<span class="kw">cbind</span>(<span class="dv">1950</span> <span class="op">-</span><span class="st"> </span>binaveage, pltYearCE[binsubs_all], abinage[binsubs_all], bin_fit_all))</code></pre></div>
+<pre><code>##                     bin_fit_all
+## 1 2001.504 2020 -60   0.2508099
+## 2 1984.716 2000 -40   0.3089820
+## 3 1964.784 1980 -20   0.4148257
+## 4 1945.734 1960   0   0.3746422
+## 5 1925.433 1940  20   0.3335772
+## 6 1904.938 1920  40   0.4749070</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">tail</span>(<span class="kw">cbind</span>(<span class="dv">1950</span> <span class="op">-</span><span class="st"> </span>binaveage, pltYearCE[binsubs_all], abinage[binsubs_all], bin_fit_all))</code></pre></div>
+<pre><code>##                         bin_fit_all
+## 96  104.60317 120 1840 -0.001638956
+## 97   84.76923 100 1860 -0.022587017
+## 98   64.81081  80 1880 -0.050844519
+## 99   44.76190  60 1900  0.034298744
+## 100  24.80447  40 1920 -0.009369594
+## 101  10.00000  20 1940 -0.105102196</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">proc.time</span>() <span class="op">-</span><span class="st"> </span>ptm</code></pre></div>
+<pre><code>##    user  system elapsed 
+##    0.84    0.00    0.84</code></pre>
+</div>
+<div id="bootstrap-by-site-confidence-intervals" class="section level2">
+<h2><span class="header-section-number">4.2</span> Bootstrap-by-site confidence intervals</h2>
+<p>The bootstrap confidence intervals are obtained by sampling with replacement sites (as opposed to individual samples), fitting a composite curve using <code>locfit()</code>, and saving these. The 95-percent confidence intervals are then determined for each target age using the <code>quantile()</code> function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Bootstrap samples</span>
+
+<span class="co"># Step 1 -- Set up to plot individual replications</span>
+<span class="cf">if</span> (plotout <span class="op">==</span><span class="st"> &quot;pdf&quot;</span>) {<span class="kw">pdf</span>(<span class="dt">file=</span><span class="kw">paste</span>(curvecsvpath,pdffile,<span class="dt">sep=</span><span class="st">&quot;&quot;</span>))}
+<span class="cf">if</span> (plotout <span class="op">==</span><span class="st"> &quot;png&quot;</span>) {<span class="kw">png</span>(<span class="dt">file=</span><span class="kw">paste</span>(curvecsvpath,pngfile,<span class="dt">sep=</span><span class="st">&quot;&quot;</span>), <span class="dt">res=</span><span class="dv">150</span>)}
+<span class="kw">plot</span>(<span class="ot">NULL</span>, <span class="dt">ylim=</span>ylim2, <span class="dt">xlim=</span>xlim, <span class="dt">ylab=</span>ylab, <span class="dt">xlab=</span>xlab, <span class="dt">cex.sub=</span><span class="fl">0.8</span>, <span class="dt">sub=</span>curvename, <span class="dt">type=</span><span class="st">&quot;n&quot;</span>)
+<span class="kw">axis</span>(<span class="dt">side =</span> <span class="dv">1</span>, <span class="dt">at =</span> <span class="kw">seq</span>(xmin<span class="op">-</span>xminortick, xmax<span class="op">+</span>xminortick, <span class="dt">by =</span> xminortick), <span class="dt">labels =</span> <span class="ot">FALSE</span>, <span class="dt">tcl =</span> <span class="op">-</span>.<span class="dv">25</span>)
+<span class="kw">axis</span>(<span class="dt">side =</span> <span class="dv">1</span>, <span class="dt">at =</span> <span class="kw">seq</span>(xmin, xmax, <span class="dt">by =</span> xminortick<span class="op">*</span><span class="dv">5</span>), <span class="dt">labels =</span> <span class="ot">FALSE</span>, <span class="dt">tcl =</span> <span class="op">-</span>.<span class="dv">5</span>) 
+
+<span class="co"># for debugging step plots</span>
+<span class="co"># plot the bin averages -- note pltYearCE offset to center the plot steps</span>
+<span class="co"># points(1950 - x, y, pch=16, cex=0.5, col=rgb(0.5,0.5,0.5,0.70))</span>
+<span class="co"># lines(bin_fit_all ~ pltYearCE, type=&quot;s&quot;, col=&quot;red&quot;, lwd=2)</span>
+<span class="co"># points(1950 - abinage, bin_fit_all, col=&quot;blue&quot;, pch=16, cex=0.5)</span>
+
+<span class="kw">set.seed</span>(<span class="dv">10</span>) <span class="co"># do this to get the same sequence of random samples for each run</span>
+
+<span class="co"># Step 2 -- Do the bootstrap iterations, and plot each age-bin curve</span>
+ptm &lt;-<span class="st"> </span><span class="kw">proc.time</span>() <span class="co"># time the loop</span>
+<span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>nreps) {
+  <span class="kw">print</span>(i)
+  randsitenum &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="kw">seq</span>(<span class="dv">1</span><span class="op">:</span>nsites), nsites, <span class="dt">replace=</span><span class="ot">TRUE</span>)
+  <span class="co"># print(head(randsitenum))</span>
+  x &lt;-<span class="st"> </span><span class="kw">as.vector</span>(age[,randsitenum])
+  y &lt;-<span class="st"> </span><span class="kw">as.vector</span>(influx[,randsitenum])
+  lfdata &lt;-<span class="st"> </span><span class="kw">data.frame</span>(x,y)
+  lfdata &lt;-<span class="st"> </span><span class="kw">na.omit</span>(lfdata)
+  lfdata &lt;-<span class="st"> </span>lfdata[lfdata<span class="op">$</span>x <span class="op">&gt;=</span><span class="st"> </span>min_age <span class="op">&amp;</span><span class="st"> </span>lfdata<span class="op">$</span>x <span class="op">&lt;</span><span class="st"> </span>max_age, ]
+  x &lt;-<span class="st"> </span>lfdata<span class="op">$</span>x; y &lt;-<span class="st"> </span>lfdata<span class="op">$</span>y
+  
+  binnum &lt;-<span class="st"> </span><span class="kw">as.integer</span>(<span class="kw">ceiling</span>((x<span class="op">-</span>abinbeg<span class="op">-</span>(abw<span class="op">/</span><span class="fl">2.0</span>))<span class="op">/</span>abw))<span class="op">+</span><span class="dv">1</span>
+  binave &lt;-<span class="st"> </span><span class="kw">tapply</span>(y, binnum, mean)
+  binaveage &lt;-<span class="st"> </span><span class="kw">tapply</span>(x, binnum, mean)
+  binsubs &lt;-<span class="st"> </span><span class="kw">as.integer</span>(<span class="kw">unlist</span>(<span class="kw">dimnames</span>(binave)))
+  <span class="co">#bin_fit &lt;- binave[binsubs]</span>
+  yfit[binsubs,i] &lt;-<span class="st"> </span>binave
+  <span class="kw">segments</span>(pltYearCE<span class="op">-</span><span class="fl">1.9</span><span class="op">*</span>(abw<span class="op">/</span><span class="dv">2</span>), yfit[,i], pltYearCE<span class="op">-</span><span class="fl">0.1</span><span class="op">*</span>(abw<span class="op">/</span><span class="dv">2</span>), yfit[,i], <span class="dt">lwd=</span><span class="fl">0.6</span>, <span class="dt">col=</span><span class="kw">rgb</span>(<span class="fl">0.3</span>,<span class="fl">0.3</span>,<span class="fl">0.3</span>,<span class="fl">0.25</span>))
+}
+<span class="kw">proc.time</span>() <span class="op">-</span><span class="st"> </span>ptm <span class="co"># how long?</span>
+
+<span class="co"># Step 3 -- Plot the unresampled (initial) area averages</span>
+<span class="kw">lines</span>(pltYearCE[binsubs_all], bin_fit_all, <span class="dt">type=</span><span class="st">&quot;s&quot;</span>, <span class="dt">lwd=</span><span class="dv">1</span>, <span class="dt">col=</span><span class="st">&quot;red&quot;</span>)
+<span class="kw">segments</span>(pltYearCE[nbins]<span class="op">-</span>abw, bin_fit_all[nbins], pltYearCE[nbins], bin_fit_all[nbins], <span class="dt">lwd=</span><span class="dv">1</span>, <span class="dt">col=</span><span class="st">&quot;red&quot;</span>)
+<span class="co">#points(pltYearCE[binsubs_all], bin_fit_all, pch=&quot;_&quot;, cex=0.8, col=&quot;blue&quot;)</span>
+
+<span class="co"># Step 4 -- Find and add bootstrap CIs</span>
+yfit975 &lt;-<span class="st"> </span><span class="kw">apply</span>(yfit, <span class="dv">1</span>, <span class="cf">function</span>(x) <span class="kw">quantile</span>(x,<span class="dt">prob=</span><span class="fl">0.975</span>, <span class="dt">na.rm=</span>T))
+yfit025 &lt;-<span class="st"> </span><span class="kw">apply</span>(yfit, <span class="dv">1</span>, <span class="cf">function</span>(x) <span class="kw">quantile</span>(x,<span class="dt">prob=</span><span class="fl">0.025</span>, <span class="dt">na.rm=</span>T))
+yfit50 &lt;-<span class="st"> </span><span class="kw">apply</span>(yfit, <span class="dv">1</span>, <span class="cf">function</span>(x) <span class="kw">quantile</span>(x,<span class="dt">prob=</span><span class="fl">0.500</span>, <span class="dt">na.rm=</span>T))
+
+<span class="kw">lines</span>(pltYearCE, yfit975, <span class="dt">type=</span><span class="st">&quot;s&quot;</span>, <span class="dt">lwd=</span><span class="fl">0.5</span>, <span class="dt">col=</span><span class="st">&quot;red&quot;</span>)
+<span class="kw">segments</span>(pltYearCE[nbins]<span class="op">-</span>abw, yfit975[nbins], pltYearCE[nbins], yfit975[nbins], <span class="dt">lwd=</span><span class="dv">1</span>, <span class="dt">col=</span><span class="st">&quot;red&quot;</span>)
+<span class="kw">lines</span>(pltYearCE, yfit025, <span class="dt">type=</span><span class="st">&quot;s&quot;</span>, <span class="dt">lwd=</span><span class="fl">0.5</span>, <span class="dt">col=</span><span class="st">&quot;red&quot;</span>)
+<span class="kw">segments</span>(pltYearCE[nbins]<span class="op">-</span>abw, yfit025[nbins], pltYearCE[nbins], yfit025[nbins], <span class="dt">lwd=</span><span class="dv">1</span>, <span class="dt">col=</span><span class="st">&quot;red&quot;</span>)</code></pre></div>
+<p><img src="bin-boot_10_files/figure-html/boostrapping-1.png" width="2100" /></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="cf">if</span> (plotout <span class="op">==</span><span class="st"> &quot;pdf&quot;</span>) {<span class="kw">dev.off</span>()}
+<span class="cf">if</span> (plotout <span class="op">==</span><span class="st"> &quot;png&quot;</span>) {<span class="kw">dev.off</span>()}
+<span class="kw">proc.time</span>() <span class="op">-</span><span class="st"> </span>ptm</code></pre></div>
+</div>
+<div id="output" class="section level2">
+<h2><span class="header-section-number">4.3</span> Output</h2>
+<p>The fitted curves are written out in the usual way.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">curveout &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="kw">cbind</span>(abinage, <span class="dv">1950</span><span class="op">-</span>abinage, bin_fit_all, yfit975, yfit025, ndec_tot, ninwin_tot))
+<span class="kw">colnames</span>(curveout) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;age&quot;</span>, <span class="st">&quot;YearCE&quot;</span>, <span class="st">&quot;bin_ave&quot;</span>, <span class="st">&quot;cu95&quot;</span>, <span class="st">&quot;cl95&quot;</span>, <span class="st">&quot;nsites&quot;</span>, <span class="st">&quot;ninwin&quot;</span>)
+outputfile &lt;-<span class="st"> </span><span class="kw">paste</span>(curvecsvpath, curvefile, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+<span class="kw">write.table</span>(curveout, outputfile, <span class="dt">col.names=</span><span class="ot">TRUE</span>, <span class="dt">row.names=</span><span class="ot">FALSE</span>, <span class="dt">sep=</span><span class="st">&quot;,&quot;</span>)</code></pre></div>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
