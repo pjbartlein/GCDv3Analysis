@@ -55,7 +55,7 @@ Set up a debugging (log) file.
 
 ```{r debug}
 # debug/log file
-debugpath <- "/Users/bartlein/Dropbox/WorkCurrent/GPWG/GCDv3/GCDv3Data/v3i/v3i_debug/"
+debugpath <- "/Projects/GPWG/GPWGv3/GCDv3Data/v3i_Rscripts/v3i_debug/"
 # if debug folder does not exist, create it
 dir.create(file.path(debugpath), showWarnings=FALSE)
 debugname <- "trans-and-zscore_debug_zt21ka.txt"
