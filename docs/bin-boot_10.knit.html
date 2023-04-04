@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Composite curves and bootstrap C.I.’s via binning   (bin-boot.R)</title>
+
+<script src="site_libs/header-attrs-2.21/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/united.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; } /* Alert */
+code span.an { color: #008000; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #0000ff; } /* ControlFlow */
+code span.ch { color: #008080; } /* Char */
+code span.cn { } /* Constant */
+code span.co { color: #008000; } /* Comment */
+code span.cv { color: #008000; } /* CommentVar */
+code span.do { color: #008000; } /* Documentation */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.im { } /* Import */
+code span.in { color: #008000; } /* Information */
+code span.kw { color: #0000ff; } /* Keyword */
+code span.op { } /* Operator */
+code span.ot { color: #ff4000; } /* Other */
+code span.pp { color: #ff4000; } /* Preprocessor */
+code span.sc { color: #008080; } /* SpecialChar */
+code span.ss { color: #008080; } /* SpecialString */
+code span.st { color: #008080; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #008080; } /* VerbatimString */
+code span.wa { color: #008000; font-weight: bold; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<link rel="stylesheet" href="SI-md-08.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">GCDv3 Analysis</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="overview.html">Overview</a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Analyses
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li class="dropdown-header">Standard analysis</li>
+    <li>
+      <a href="mdb-to-csv_07.html">Query and site .csv files from an Access database (mdb-to-csv.R)</a>
+    </li>
+    <li>
+      <a href="trans-and-zscore_07.html">Box-Cox transformation and Z-Score rescaling (trans-and-zscore.R)</a>
+    </li>
+    <li>
+      <a href="presample-bin_07.html">Presampling or binning of transformed data (presample-bin.R)</a>
+    </li>
+    <li>
+      <a href="smooth-curve_07.html">Composite curves and bootstrap C.I.'s using locfit() (smooth-curve.R)</a>
+    </li>
+    <li class="dropdown-header">Alternative approaches</li>
+    <li>
+      <a href="trans-and-norman_10.html">Box-Cox transformation and normalized anomaly rescaling (trans-and-norman.R)</a>
+    </li>
+    <li>
+      <a href="bin-boot_10.html">Composite curves and bootstrap C.I.'s via binning</a>
+    </li>
+  </ul>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    Code
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li class="dropdown-header">Standard analysis</li>
+    <li>
+      <a href="mdb-to-csv_07_code.html">mdb-to-csv_code.R</a>
+    </li>
+    <li>
+      <a href="trans-and-zscore_07_code.html">trans-and-zscore.R</a>
+    </li>
+    <li>
+      <a href="presample-bin_07_code.html">presample-bin.R</a>
+    </li>
+    <li>
+      <a href="smooth-curve_07_code.html">smooth-curve.R</a>
+    </li>
+    <li class="dropdown-header">Alternative approaches</li>
+    <li>
+      <a href="mdb-to-csv_07_code_osx.html">mdb-to-csv_code_osx.R</a>
+    </li>
+    <li>
+      <a href="trans-and-norman_10_code.html">trans-and-norman.R</a>
+    </li>
+    <li>
+      <a href="bin-boot_10_code.html">bin-boot.R</a>
+    </li>
+  </ul>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Composite curves and bootstrap C.I.’s via
+binning <br> (bin-boot.R)</h1>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#introduction" id="toc-introduction"><span
+class="toc-section-number">1</span> Introduction</a></li>
+<li><a href="#set-up" id="toc-set-up"><span
+class="toc-section-number">2</span> Set up</a></li>
+<li><a href="#calculation-preliminaries"
+id="toc-calculation-preliminaries"><span
+class="toc-section-number">3</span> Calculation preliminaries</a>
+<ul>
+<li><a href="#initial-steps" id="toc-initial-steps"><span
+class="toc-section-number">3.1</span> Initial steps</a></li>
+</ul></li>
+</ul>
+</div>
+
+<div id="introduction" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Introduction</h1>
+<p>This script (<code>binboot-curve.R</code>) fits step-like composite
+curves, with bootstrapping by site confidence intervals, via binning. As
+is the case with other analysis scripts, the script has two parts, a
+set-up portion that changes from analysis to analysis, and a computation
+part that does not change. This version reads “presampled” data.</p>
+</div>
+<div id="set-up" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Set up</h1>
+<p>The variables <code>queryname</code>, <code>basename</code> and
+<code>binname</code> are used to compose the path and filenames for the
+presampled data.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># age-bin averages of influx data</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="co"># bootstrap-by-site confidence intervals</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co"># names</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>queryname <span class="ot">&lt;-</span> <span class="st">&quot;v3i&quot;</span> <span class="co"># </span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>basename <span class="ot">&lt;-</span> <span class="st">&quot;nt2kb&quot;</span> </span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co"># paths for input and output .csv files -- modify as appropriate</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>datapath <span class="ot">&lt;-</span> <span class="st">&quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/&quot;</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>sitelistpath <span class="ot">&lt;-</span> <span class="st">&quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_sitelists/&quot;</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>sitelist <span class="ot">&lt;-</span> <span class="st">&quot;v3i_nsa_globe&quot;</span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>outpath <span class="ot">&lt;-</span> <span class="st">&quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_curves/&quot;</span></span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="co"># prebinning bin width</span></span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>pbw <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>pbw_char <span class="ot">&lt;-</span> <span class="fu">as.character</span>(pbw)</span>
+<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a><span class="cf">if</span> (pbw <span class="sc">&lt;</span> <span class="dv">10</span>) pbw_char <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;0&quot;</span>, pbw_char, <span class="at">sep=</span><span class="st">&quot;&quot;</span>)</span></code></pre></div>
+<p>Set the number of bootstrap samples or replications:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># number of bootstrap samples/replications</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>nreps <span class="ot">&lt;-</span> <span class="dv">200</span></span></code></pre></div>
+<p>Specifiy the age-bin centers, and spacing. This version uses 20-year
+wide bins, with the first bin centered at -60 yr BP, or 2010 CE, and the
+last at 1950 yr BP, or 1 CE.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># age bin centers</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>abw <span class="ot">&lt;-</span> <span class="dv">20</span> </span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>abinbeg <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">60</span> </span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>abinend <span class="ot">&lt;-</span> <span class="dv">1950</span></span></code></pre></div>
+<p>Set array sizes for saving bootstrap results.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># array sizes</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>maxrecs <span class="ot">&lt;-</span> <span class="dv">2000</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>maxreps <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co"># plotting set up</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>xmin <span class="ot">&lt;-</span> <span class="dv">0</span>; xmax <span class="ot">&lt;-</span> <span class="dv">2020</span>; ymin1 <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">1.0</span>; ymax1 <span class="ot">&lt;-</span> <span class="fl">1.0</span>; ymin2 <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">0.5</span>; ymax2 <span class="ot">&lt;-</span> <span class="fl">1.0</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>xlim<span class="ot">=</span><span class="fu">c</span>(xmin,xmax); ylim1<span class="ot">=</span><span class="fu">c</span>(ymin1,ymax1); ylim2 <span class="ot">&lt;-</span> <span class="fu">c</span>(ymin2,ymax2)</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>xlab<span class="ot">=</span><span class="st">&quot;Year CE&quot;</span>; xminortick <span class="ot">&lt;-</span> <span class="dv">50</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>ylab<span class="ot">=</span><span class="st">&quot;Normalized Anomalies of Transformed Influx&quot;</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co"># plot output </span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>plotout <span class="ot">&lt;-</span> <span class="st">&quot;screen&quot;</span> <span class="co"># &quot;pdf&quot; # &quot;png&quot; # </span></span></code></pre></div>
+</div>
+<div id="calculation-preliminaries" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Calculation
+preliminaries</h1>
+<div id="initial-steps" class="section level2" number="3.1">
+<h2><span class="header-section-number">3.1</span> Initial steps</h2>
+<p>Set various output paths and filenames.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># no changes below here</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># prebinning file name</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>binname <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;bw&quot;</span>, pbw_char, <span class="at">sep=</span><span class="st">&quot;&quot;</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co"># presampled/binned files</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>csvpath <span class="ot">&lt;-</span> <span class="st">&quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_presamp_csv/&quot;</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>csvname <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;_presamp_influx_&quot;</span>,basename,<span class="st">&quot;_&quot;</span>,binname,<span class="st">&quot;.csv&quot;</span>, <span class="at">sep=</span><span class="st">&quot;&quot;</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co"># site list file</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>sitelistfile <span class="ot">&lt;-</span> <span class="fu">paste</span>(sitelistpath, sitelist, <span class="st">&quot;.csv&quot;</span>, <span class="at">sep=</span><span class="st">&quot;&quot;</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>sitelistfile</span></code></pre></div>
+<pre><code>## [1] &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_sitelists/v3i_nsa_globe.csv&quot;</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># curve (output) path and file</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>curvecsvpath <span class="ot">&lt;-</span> <span class="fu">paste</span>(datapath,queryname,<span class="st">&quot;_curves/&quot;</span>,<span class="at">sep=</span><span class="st">&quot;&quot;</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co"># if output folder does not exist, create it</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="fu">dir.create</span>(<span class="fu">file.path</span>(datapath, <span class="fu">paste</span>(queryname,<span class="st">&quot;_curves/&quot;</span>,<span class="at">sep=</span><span class="st">&quot;&quot;</span>)), <span class="at">showWarnings=</span><span class="cn">FALSE</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>curvename <span class="ot">&lt;-</span> <span class="fu">paste</span>(sitelist,<span class="st">&quot;_binboot_&quot;</span>,basename,<span class="st">&quot;_&quot;</span>,binname,<span class="st">&quot;_abw&quot;</span>,<span class="fu">as.character</span>(abw),<span class="st">&quot;_&quot;</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="fu">as.character</span>(nreps), <span class="at">sep=</span><span class="st">&quot;&quot;</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>curvefile <span class="ot">&lt;-</span> <span class="fu">paste</span>(curvename, <span class="st">&quot;.csv&quot;</span>, <span class="at">sep=</span><span class="st">&quot;&quot;</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="fu">print</span>(curvecsvpath)</span></code></pre></div>
+<pre><code>## [1] &quot;/Projects/GPWG/GPWGv3/GCDv3Data/v3i/v3i_curves/&quot;</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">print</span>(curvename)</span></code></pre></div>
+<pre><code>## [1] &quot;v3i_nsa_globe_binboot_nt2kb_bw10_abw20_200&quot;</code></pre>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">print</span>(curvefile)</span></code></pre></div>
+<pre><code>## [1] &quot;v3i_nsa_globe_binboot_nt2kb_bw10_abw20_200.csv&quot;</code></pre>
+<p>Code block to implement writing .pdf to file:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co"># .pdf plot of bootstrap iterations</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="cf">if</span> (plotout <span class="sc">==</span> <span class="st">&quot;pdf&quot;</span>) {</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>pdffile <span class="ot">&lt;-</span> <span class="fu">paste</span>(curvename, <span class="st">&quot;.pdf&quot;</span>, <span class="at">sep=</span><span class="st">&quot;&quot;</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="fu">print</span>(pdffile)</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>}</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="co"># .png plot of bootstrap iterations</span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="cf">if</span> (plotout <span class="sc">==</span> <span class="st">&quot;png&quot;</span>) {</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>  pngfile <span class="ot">&lt;-</span> <span class="fu">paste</span>(curvename, <span class="st">&quot;.png&quot;</span>, <span class="at">sep=</span><span class="st">&quot;&quot;</span>)</span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>  <span class="fu">print</span>(pngfile)</span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>}</span></code></pre></div>
+<p>Read the list of sites to be processed. Note that this is the site
+list may contain sites that after transforming and presampling may have
+no useful data. Those sites are ignored when the data are read in.</p>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
